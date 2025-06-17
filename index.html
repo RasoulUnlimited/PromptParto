@@ -38,6 +38,13 @@
                         placeholder="پرامپت طولانی خود را اینجا وارد کنید یا فایل متنی را بکشید و رها کنید..."
                         aria-label="Prompt Input"
                     ></textarea>
+                    <!-- New: Drag and Drop Overlay -->
+                    <label for="fileInput" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-gray-400 dark:text-gray-500 text-lg opacity-0 transition-opacity duration-300 bg-transparent rounded-lg" id="dragDropOverlay">
+                        <i class="fas fa-file-upload text-5xl mb-2"></i> 
+                        <span class="text-xl">فایل متنی را اینجا رها کنید</span>
+                    </label>
+                    <input type="file" id="fileInput" accept=".txt" class="hidden" aria-label="Upload text file">
+                    
                     <div class="flex justify-between text-sm mt-2">
                         <p id="charCount" class="text-gray-500 dark:text-gray-400 text-left">
                             کاراکترها: 0
