@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const promptHistoryDropdownToggle = document.getElementById('promptHistoryDropdownToggle');
     const promptHistoryDropdownMenu = document.getElementById('promptHistoryDropdownMenu');
     const historyList = document.getElementById('historyList');
+    const clearHistoryButton = document.getElementById('clearHistoryButton'); // New: Clear history button
 
     // Share and Data Management buttons
     const shareButton = document.getElementById('shareButton');
@@ -60,18 +61,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const aiSendToAIButton = document.getElementById('aiSendToAIButton');
     const copyAiResponseButton = document.getElementById('copyAiResponseButton');
     const insertAiResponseButton = document.getElementById('insertAiResponseButton');
+    const aiRefiningPartInfo = document.getElementById('aiRefiningPartInfo'); // Keep for showing current part
+    const clearAiResponseButton = document.getElementById('clearAiResponseButton'); // New: Clear AI response button
 
     // Drag and Drop elements
     const dragDropZone = promptInput; // The textarea is also the drag-drop zone
     const dragDropOverlay = document.getElementById('dragDropOverlay');
     const fileInput = document.getElementById('fileInput');
 
-    // Custom Confirmation Modal elements
-    const confirmModal = document.getElementById('confirmModal');
-    const confirmTitle = document.getElementById('confirmTitle');
-    const confirmMessage = document.getElementById('confirmMessage');
-    const confirmYesButton = document.getElementById('confirmYes');
-    const confirmNoButton = document.getElementById('confirmNo');
+    // Custom Confirmation Modal elements (Renamed from previous iteration for clarity)
+    const confirmModal = document.getElementById('confirmationModal'); // Updated ID from HTML
+    const confirmTitle = document.getElementById('confirmationTitle'); // Updated ID from HTML
+    const confirmMessage = document.getElementById('confirmationMessage'); // Updated ID from HTML
+    const closeConfirmModalButton = document.getElementById('closeConfirmationModal'); // Updated ID from HTML
+    const cancelConfirmButton = document.getElementById('cancelConfirmationButton'); // Updated ID from HTML
+    const confirmActionButton = document.getElementById('confirmActionButton'); // Updated ID from HTML
+    let confirmationCallback = null; // Callback function for confirmation
 
     // Default constants for splitting logic
     let MAX_CHARS_PER_PART = parseInt(maxCharsPerPartInput.value, 10) || 3800;
@@ -179,32 +184,35 @@ document.addEventListener('DOMContentLoaded', () => {
      * Shows a custom confirmation modal.
      * یک پنجره مودال تأیید سفارشی را نمایش می‌دهد.
      * @param {string} message - The message to display.
-     * @param {function} onConfirm - Callback function if 'Yes' is clicked.
-     * @param {function} onCancel - Callback function if 'No' is clicked or modal is closed.
+     * @param {function} onConfirmCallback - Callback function if 'Yes' is clicked.
      * @param {string} [title='تأیید'] - Optional title for the modal.
      */
-    function showConfirmModal(message, onConfirm, onCancel, title = 'تأیید') {
+    function showConfirmationModal(message, onConfirmCallback, title = 'تأیید') {
         confirmTitle.textContent = title;
         confirmMessage.textContent = message;
+        confirmationCallback = onConfirmCallback;
         confirmModal.classList.remove('hidden');
-
-        const handleConfirm = () => {
-            confirmModal.classList.add('hidden');
-            confirmYesButton.removeEventListener('click', handleConfirm);
-            confirmNoButton.removeEventListener('click', handleCancel);
-            onConfirm();
-        };
-
-        const handleCancel = () => {
-            confirmModal.classList.add('hidden');
-            confirmYesButton.removeEventListener('click', handleConfirm);
-            confirmNoButton.removeEventListener('click', handleCancel);
-            onCancel();
-        };
-
-        confirmYesButton.addEventListener('click', handleConfirm);
-        confirmNoButton.addEventListener('click', handleCancel);
     }
+
+    /**
+     * Hides the custom confirmation modal.
+     * پنجره مودال تأیید سفارشی را پنهان می‌کند.
+     */
+    function hideConfirmationModal() {
+        confirmModal.classList.add('hidden');
+        confirmationCallback = null;
+    }
+
+    // Event listeners for custom confirmation modal buttons
+    closeConfirmModalButton.addEventListener('click', hideConfirmationModal);
+    cancelConfirmButton.addEventListener('click', hideConfirmationModal);
+    confirmActionButton.addEventListener('click', () => {
+        if (confirmationCallback) {
+            confirmationCallback();
+        }
+        hideConfirmationModal();
+    });
+
 
     /**
      * Updates the MAX_CHARS_PER_PART based on user input and validates it.
@@ -355,6 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearOutputOnlyButton.classList.add('opacity-50', 'cursor-not-allowed');
 
         showMessage('همه چیز پاک شد.', 'success');
+        saveCurrentPromptState(); // Save empty state to history
     }
 
     /**
@@ -707,10 +716,9 @@ document.addEventListener('DOMContentLoaded', () => {
             deletePartButton.innerHTML = `<i class="fas fa-trash-alt ml-2"></i> حذف بخش`;
             deletePartButton.title = `حذف بخش ${index + 1}`;
             deletePartButton.addEventListener('click', () => {
-                showConfirmModal(
+                showConfirmationModal(
                     `آیا مطمئنید می‌خواهید بخش ${index + 1} را حذف کنید؟`,
-                    () => deletePart(index),
-                    () => showMessage('حذف بخش لغو شد.', 'info')
+                    () => deletePart(index)
                 );
             });
             buttonContainer.appendChild(deletePartButton);
@@ -753,7 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Opens the AI response modal and prepares for AI interaction.
-     * پنجره مدال پاسخ هوش مصنوعی را باز کرده و آن را برای تعامل با هوش مصنوعی آماده می‌کند.
+     * پنجره مودال پاسخ هوش مصنوعی را باز کرده و آن را برای تعامل با هوش مصنوعی آماده می‌کند.
      * @param {string} partContent - The content of the prompt part selected.
      * @param {number} partIndex - The index of the part in the current output for replacement.
      * @param {HTMLElement} partElement - The DOM element of the part to highlight.
@@ -774,6 +782,8 @@ document.addEventListener('DOMContentLoaded', () => {
         aiResponseTextarea.value = '';
         aiLoadingSpinner.classList.add('hidden');
         aiResponseTextarea.classList.remove('hidden');
+        aiRefiningPartInfo.textContent = `(در حال اصلاح بخش ${partIndex + 1})`; // Update part info
+        aiRefiningPartInfo.classList.remove('hidden');
         aiResponseModal.classList.add('open');
     }
 
@@ -781,7 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Sends a request to the Gemini API to refine a prompt part.
      * درخواستی را به API گیمی‌نی برای اصلاح یک بخش از پرامپت ارسال می‌کند.
      * @param {string} textToRefine - The text content to be refined by AI.
-     * @param {string} commandPrompt - The specific instruction for the AI (e.g., "Summarize", "Rephrase).
+     * @param {string} commandPrompt - The specific instruction for the AI (e.g., "Summarize", "Rephrase").
      */
     async function sendToAI(textToRefine, commandPrompt) {
         aiResponseTextarea.value = '';
@@ -839,6 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listeners for AI modal buttons
     closeAiModalButton.addEventListener('click', () => {
         aiResponseModal.classList.remove('open');
+        aiRefiningPartInfo.classList.add('hidden'); // Hide part info
         if (currentlyHighlightedPartElement) {
             currentlyHighlightedPartElement.classList.remove('active-ai-edit');
             currentlyHighlightedPartElement = null;
@@ -945,6 +956,11 @@ document.addEventListener('DOMContentLoaded', () => {
         copyTextToClipboard(aiResponseTextarea.value, 'پاسخ هوش مصنوعی', copyAiResponseButton);
     });
 
+    clearAiResponseButton.addEventListener('click', () => {
+        aiResponseTextarea.value = '';
+        showMessage('پاسخ هوش مصنوعی پاک شد.', 'info');
+    });
+
     insertAiResponseButton.addEventListener('click', () => {
         if (currentPartOriginalContent && aiResponseTextarea.value.trim() && currentPartOriginalIndex !== -1) {
             const replacementText = aiResponseTextarea.value.trim();
@@ -1045,7 +1061,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCharCount();
         updateWordCount();
         updateTokenCount(); // Update token count after reorder
-        showMessage('ترتیب بخش‌ها تغییر کرد. می‌توانید پرامپت اصلی را کپی کنید یا دوباره تقسیم کنید.', 'info');
+        showMessage('ترتیب بخش‌ها تغییر کرد. می‌توانید پرامپپت اصلی را کپی کنید یا دوباره تقسیم کنید.', 'info');
         triggerAutoSplit();
         saveCurrentPromptState(); // Save to history after reordering
     }
@@ -1061,7 +1077,7 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function saveCurrentPromptState() {
         const currentContent = promptInput.value.trim();
-        // Prevent saving if current content is identical to the latest history entry
+        // Prevent saving if current content is identical to the latest history entry OR if content is empty and history already has an empty entry
         if (promptHistory.length > 0 && currentContent === promptHistory[0].content) {
             return;
         }
@@ -1114,14 +1130,20 @@ document.addEventListener('DOMContentLoaded', () => {
         historyList.innerHTML = '';
         if (promptHistory.length === 0) {
             historyList.innerHTML = '<p class="text-center text-gray-500 dark:text-gray-400 p-2">هیچ تاریخچه‌ای وجود ندارد.</p>';
+            clearHistoryButton.classList.add('hidden'); // Hide clear button if no history
             return;
+        } else {
+            clearHistoryButton.classList.remove('hidden'); // Show clear button if history exists
         }
 
         promptHistory.forEach((entry, index) => {
             const timeAgo = formatTimeAgo(entry.timestamp);
+            const div = document.createElement('div');
+            div.classList.add('flex', 'justify-between', 'items-center', 'p-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'transition-colors', 'duration-200');
+
             const historyItem = document.createElement('a');
             historyItem.href = '#';
-            historyItem.classList.add('block', 'px-4', 'py-2', 'text-sm', 'text-gray-700', 'dark:text-gray-200', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'truncate');
+            historyItem.classList.add('flex-grow', 'block', 'px-2', 'py-1', 'text-sm', 'text-gray-700', 'dark:text-gray-200', 'truncate');
             historyItem.textContent = `${entry.content.substring(0, 40)}... (${timeAgo})`;
             historyItem.title = `بازگشت به: ${entry.content}\nذخیره شده: ${entry.timestamp.toLocaleString()}`;
             historyItem.addEventListener('click', (e) => {
@@ -1129,14 +1151,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 promptInput.value = entry.content;
                 updateCharCount();
                 updateWordCount();
-                updateTokenCount(); // Update token count
+                updateTokenCount();
                 showMessage(`پرامپت به نسخه قبلی بازگردانده شد (${timeAgo}).`, 'info');
                 promptHistoryDropdownMenu.classList.add('hidden');
                 triggerAutoSplit();
+                // When loading from history, we *don't* want to immediately add to history again
+                // The next user input will add a new state.
             });
-            historyList.appendChild(historyItem);
+            div.appendChild(historyItem);
+
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete-prompt-btn', 'bg-red-500', 'hover:bg-red-600', 'text-white', 'p-1', 'rounded', 'text-xs', 'ml-2');
+            deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteButton.title = `حذف این مورد از تاریخچه`;
+            deleteButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                showConfirmationModal('آیا مطمئنید می‌خواهید این مورد را از تاریخچه حذف کنید؟', () => {
+                    deleteHistoryItem(index);
+                    showMessage('آیتم تاریخچه حذف شد.', 'success');
+                });
+            });
+            div.appendChild(deleteButton);
+            historyList.appendChild(div);
         });
     }
+
+    /**
+     * Deletes a specific item from the prompt history by index.
+     * یک آیتم خاص را از تاریخچه پرامپت بر اساس ایندکس حذف می‌کند.
+     * @param {number} indexToDelete - The index of the item to delete.
+     */
+    function deleteHistoryItem(indexToDelete) {
+        promptHistory.splice(indexToDelete, 1);
+        savePromptHistoryToLocalStorage();
+        renderPromptHistoryList();
+    }
+
+    /**
+     * Clears the entire prompt history.
+     * کل تاریخچه پرامپت را پاک می‌کند.
+     */
+    function clearPromptHistory() {
+        showConfirmationModal('آیا مطمئنید می‌خواهید کل تاریخچه پرامپت را پاک کنید؟ این عمل برگشت‌ناپذیر است.', () => {
+            promptHistory = [];
+            savePromptHistoryToLocalStorage();
+            renderPromptHistoryList();
+            showMessage('تاریخچه پرامپت پاک شد.', 'success');
+        });
+    }
+
 
     /**
      * Formats a date object to "X minutes/hours/days ago".
@@ -1194,6 +1257,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateWordCount();
                 updateTokenCount();
                 showMessage('پرامپت ذخیره شده خودکار بارگذاری شد.', 'info');
+                // Do not save to history immediately, let the user's first input do that.
             }
         } catch (e) {
             console.error('Error loading auto-saved prompt:', e);
@@ -1255,7 +1319,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 showMessage('پرامپت و تنظیمات از لینک بارگذاری شد!', 'info');
                 history.replaceState(null, '', window.location.pathname); // Clean up URL
                 triggerAutoSplit();
-            } catch (e) {
+            }
+            catch (e) {
                 console.error('Error decoding/applying shared URL data:', e);
                 showMessage('خطا در بارگذاری اطلاعات از لینک اشتراک‌گذاری.', 'error');
             }
@@ -1272,7 +1337,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     dragDropZone.addEventListener('dragleave', (e) => {
-        // Only remove drag-over if leaving the main drop zone, not just child elements
+        // Check if the relatedTarget is outside the dragDropZone entirely
         if (!dragDropZone.contains(e.relatedTarget)) {
             dragDropZone.classList.remove('drag-over');
             dragDropOverlay.style.opacity = '0';
@@ -1408,13 +1473,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     clearAllButton.addEventListener('click', () => {
-        showConfirmModal('آیا مطمئنید می‌خواهید همه چیز را پاک کنید؟ این عمل برگشت‌ناپذیر است.', clearAll, () => showMessage('پاک کردن لغو شد.', 'info'));
+        showConfirmationModal('آیا مطمئنید می‌خواهید همه چیز را پاک کنید؟ این عمل برگشت‌ناپذیر است.', clearAll);
     });
     clearOutputOnlyButton.addEventListener('click', clearOutputOnly);
     exportTextButton.addEventListener('click', exportTextFile);
     exportJsonButton.addEventListener('click', exportJsonFile);
     savePromptButton.addEventListener('click', saveCurrentPrompt);
     shareButton.addEventListener('click', generateShareableUrl);
+    clearHistoryButton.addEventListener('click', clearPromptHistory); // New listener for clear history
 
     loadPromptDropdownToggle.addEventListener('click', () => {
         loadPromptDropdownMenu.classList.toggle('hidden');
@@ -1435,10 +1501,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!loadPromptDropdownToggle.contains(event.target) && !loadPromptDropdownMenu.contains(event.target)) {
             loadPromptDropdownMenu.classList.add('hidden');
         }
-        // Only close history dropdown if not interacting with the modal
         if (!promptHistoryDropdownToggle.contains(event.target) && !promptHistoryDropdownMenu.contains(event.target) && !confirmModal.contains(event.target)) {
             promptHistoryDropdownMenu.classList.add('hidden');
         }
+        // Don't close confirmation modal if clicking outside it but within it
     });
 
 
@@ -1565,7 +1631,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const promptName = prompt('لطفاً یک نام برای پرامپت خود وارد کنید:'); // Use browser prompt for simplicity for now
+        const promptName = prompt('لطفاً یک نام برای پرامپت خود وارد کنید:'); // Keep prompt for name input
         if (!promptName || promptName.trim() === '') {
             showMessage('نام پرامپت نمی‌تواند خالی باشد.', 'error');
             return;
@@ -1575,19 +1641,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const existingPromptIndex = savedPrompts.findIndex(p => p.name === promptName.trim());
 
         if (existingPromptIndex !== -1) {
-            showConfirmModal(
-                `پرامپتی با نام "${promptName.trim()}" از قبل وجود دارد. آیا می‌خواهید آن را بازنویسی کنید؟`,
-                () => { // On Confirm
-                    savedPrompts[existingPromptIndex].content = promptContent;
-                    savePromptsToLocalStorage(savedPrompts);
-                    renderSavedPromptsList();
-                    showMessage(`پرامپت "${promptName.trim()}" با موفقیت بازنویسی شد.`, 'success');
-                },
-                () => { // On Cancel
-                    showMessage('بازنویسی پرامپت لغو شد.', 'info');
-                },
-                'بازنویسی پرامپت'
-            );
+            showConfirmationModal(`پرامپتی با نام "${promptName.trim()}" از قبل وجود دارد. آیا می‌خواهید آن را بازنویسی کنید؟`, () => {
+                savedPrompts[existingPromptIndex].content = promptContent;
+                savePromptsToLocalStorage(savedPrompts);
+                renderSavedPromptsList();
+                showMessage(`پرامپت "${promptName.trim()}" با موفقیت بازنویسی شد.`, 'success');
+            }, 'بازنویسی پرامپت');
         } else {
             savedPrompts.push({ name: promptName.trim(), content: promptContent });
             savePromptsToLocalStorage(savedPrompts);
@@ -1637,18 +1696,11 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
             deleteButton.title = `حذف "${prompt.name}"`;
             deleteButton.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent the parent loadLink click
-                showConfirmModal(
-                    `آیا مطمئنید می‌خواهید پرامپت "${prompt.name}" را حذف کنید؟`,
-                    () => { // On Confirm
-                        deletePromptFromStorage(prompt.name);
-                        showMessage(`پرامپت "${prompt.name}" حذف شد.`, 'success');
-                    },
-                    () => { // On Cancel
-                        showMessage('حذف پرامپت لغو شد.', 'info');
-                    },
-                    'حذف پرامپت'
-                );
+                e.stopPropagation();
+                showConfirmationModal(`آیا مطمئنید می‌خواهید پرامپت "${prompt.name}" را حذف کنید؟`, () => {
+                    deletePrompt(prompt.name);
+                    showMessage(`پرامپت "${prompt.name}" حذف شد.`, 'success');
+                }, 'حذف پرامپت');
             });
             div.appendChild(deleteButton);
 
@@ -1661,7 +1713,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * یک پرامپت ذخیره‌شده را بر اساس نام از حافظه محلی حذف می‌کند.
      * @param {string} nameToDelete - The name of the prompt to delete.
      */
-    function deletePromptFromStorage(nameToDelete) {
+    function deletePrompt(nameToDelete) {
         let savedPrompts = getSavedPrompts();
         savedPrompts = savedPrompts.filter(p => p.name !== nameToDelete);
         savePromptsToLocalStorage(savedPrompts);
@@ -1710,7 +1762,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 reader.onload = (event) => {
                     try {
                         const importedData = JSON.parse(event.target.result);
-                        showConfirmModal(
+                        showConfirmationModal(
                             'وارد کردن داده‌ها، داده‌های موجود را بازنویسی خواهد کرد. آیا مطمئنید؟',
                             () => { // On Confirm
                                 if (importedData.settings) {
@@ -1730,12 +1782,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 renderPromptHistoryList();
                                 triggerAutoSplit();
                                 showMessage('تمام داده‌ها با موفقیت وارد شدند!', 'success');
-                            },
-                            () => { // On Cancel
-                                showMessage('وارد کردن داده‌ها لغو شد.', 'info');
-                            },
-                            'وارد کردن داده‌ها'
-                        );
+                            }
+                        , 'وارد کردن داده‌ها');
                     } catch (parseError) {
                         showMessage('خطا در خواندن فایل JSON. فایل معتبر نیست.', 'error');
                         console.error('Error parsing imported JSON:', parseError);
@@ -1780,7 +1828,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'c':
                     if (e.shiftKey) {
                         e.preventDefault();
-                        clearAllButton.click();
+                        clearAllButton.click(); // This will trigger the confirmation modal
                     }
                     break;
                 case 'o':
