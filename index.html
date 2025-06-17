@@ -42,10 +42,16 @@
                         <p id="charCount" class="text-gray-500 dark:text-gray-400 text-left">
                             کاراکترها: 0
                         </p>
-                        <p id="wordCount" class="text-gray-500 dark:text-gray-400 text-right">
+                        <p id="wordCount" class="text-gray-500 dark:text-gray-400 text-center">
                             کلمات: 0
                         </p>
+                        <p id="tokenCount" class="text-gray-500 dark:text-gray-400 text-right">
+                            توکن‌ها (تخمینی): 0
+                        </p>
                     </div>
+                    <p id="autoSaveStatus" class="text-xs text-gray-400 mt-1 text-center hidden">
+                        <i class="fas fa-check-circle text-green-500 ml-1"></i> ذخیره خودکار شد.
+                    </p>
                 </div>
                 <div class="flex flex-col gap-3 w-full md:w-1/4">
                     <button
@@ -289,6 +295,10 @@
                     <button id="aiSummarizeButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">خلاصه کن</button>
                     <button id="aiRephraseButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">بازنویسی کن</button>
                     <button id="aiElaborateButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">توضیح بده</button>
+                    <button id="aiConciseButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">مختصر کن</button>
+                    <button id="aiExpandButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">گسترش بده</button>
+                    <button id="aiToneFormalButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">لحن رسمی</button>
+                    <button id="aiToneInformalButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">لحن غیررسمی</button>
                     <button id="aiTranslateEnButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">ترجمه به انگلیسی</button>
                     <button id="aiTranslateFaButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">ترجمه به فارسی</button>
                     <button id="aiSendToAIButton" class="ai-action-btn bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm transition-colors duration-200">
