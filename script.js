@@ -36,8 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const promptHistoryDropdownMenu = document.getElementById('promptHistoryDropdownMenu');
     const historyList = document.getElementById('historyList');
 
-    // Share button
+    // Share and Data Management buttons
     const shareButton = document.getElementById('shareButton');
+    const exportAllDataButton = document.getElementById('exportAllDataButton');
+    const importAllDataButton = document.getElementById('importAllDataButton');
+    const importFileInput = document.getElementById('importFileInput');
 
     // AI Modal elements
     const aiResponseModal = document.getElementById('aiResponseModal');
@@ -62,6 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const dragDropZone = promptInput; // The textarea is also the drag-drop zone
     const dragDropOverlay = document.getElementById('dragDropOverlay');
     const fileInput = document.getElementById('fileInput');
+
+    // Custom Confirmation Modal elements
+    const confirmModal = document.getElementById('confirmModal');
+    const confirmTitle = document.getElementById('confirmTitle');
+    const confirmMessage = document.getElementById('confirmMessage');
+    const confirmYesButton = document.getElementById('confirmYes');
+    const confirmNoButton = document.getElementById('confirmNo');
 
     // Default constants for splitting logic
     let MAX_CHARS_PER_PART = parseInt(maxCharsPerPartInput.value, 10) || 3800;
@@ -164,6 +174,37 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Utility Functions ---
+
+    /**
+     * Shows a custom confirmation modal.
+     * یک پنجره مودال تأیید سفارشی را نمایش می‌دهد.
+     * @param {string} message - The message to display.
+     * @param {function} onConfirm - Callback function if 'Yes' is clicked.
+     * @param {function} onCancel - Callback function if 'No' is clicked or modal is closed.
+     * @param {string} [title='تأیید'] - Optional title for the modal.
+     */
+    function showConfirmModal(message, onConfirm, onCancel, title = 'تأیید') {
+        confirmTitle.textContent = title;
+        confirmMessage.textContent = message;
+        confirmModal.classList.remove('hidden');
+
+        const handleConfirm = () => {
+            confirmModal.classList.add('hidden');
+            confirmYesButton.removeEventListener('click', handleConfirm);
+            confirmNoButton.removeEventListener('click', handleCancel);
+            onConfirm();
+        };
+
+        const handleCancel = () => {
+            confirmModal.classList.add('hidden');
+            confirmYesButton.removeEventListener('click', handleConfirm);
+            confirmNoButton.removeEventListener('click', handleCancel);
+            onCancel();
+        };
+
+        confirmYesButton.addEventListener('click', handleConfirm);
+        confirmNoButton.addEventListener('click', handleCancel);
+    }
 
     /**
      * Updates the MAX_CHARS_PER_PART based on user input and validates it.
@@ -611,7 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
             partBox.classList.add('prompt-part-box', 'dark:bg-gray-800', 'dark:border-gray-600', 'dark:shadow-lg');
             partBox.draggable = true;
             partBox.dataset.originalContent = partContent;
-            partBox.dataset.originalIndex = index;
+            partBox.dataset.originalIndex = index; // Store original index for reordering logic
 
             const partTitle = document.createElement('h3');
             partTitle.classList.add('text-lg', 'font-medium', 'mb-2', 'text-gray-900', 'dark:text-gray-200');
@@ -656,9 +697,23 @@ document.addEventListener('DOMContentLoaded', () => {
             aiRefineButton.innerHTML = `<i class="fas fa-robot ml-2"></i> اصلاح با هوش مصنوعی`;
             aiRefineButton.title = 'اصلاح یا خلاصه سازی این بخش با هوش مصنوعی';
             aiRefineButton.addEventListener('click', () => {
-                openAiModal(partContent, index);
+                openAiModal(partContent, index, partBox); // Pass partBox for highlighting
             });
             buttonContainer.appendChild(aiRefineButton);
+
+            // New: Delete Part button
+            const deletePartButton = document.createElement('button');
+            deletePartButton.classList.add('bg-red-500', 'hover:bg-red-600', 'text-white', 'py-2', 'px-4', 'rounded-lg', 'font-medium', 'transition', 'duration-200', 'flex', 'items-center', 'justify-center');
+            deletePartButton.innerHTML = `<i class="fas fa-trash-alt ml-2"></i> حذف بخش`;
+            deletePartButton.title = `حذف بخش ${index + 1}`;
+            deletePartButton.addEventListener('click', () => {
+                showConfirmModal(
+                    `آیا مطمئنید می‌خواهید بخش ${index + 1} را حذف کنید؟`,
+                    () => deletePart(index),
+                    () => showMessage('حذف بخش لغو شد.', 'info')
+                );
+            });
+            buttonContainer.appendChild(deletePartButton);
 
             partBox.appendChild(buttonContainer);
             outputContainer.appendChild(partBox);
@@ -667,17 +722,49 @@ document.addEventListener('DOMContentLoaded', () => {
         addDragDropListenersToParts();
     }
 
+    /**
+     * Deletes a specific part from the output container and rebuilds the main prompt input.
+     * یک بخش خاص را از کانتینر خروجی حذف کرده و ورودی پرامپت اصلی را بازسازی می‌کند.
+     * @param {number} indexToDelete - The index of the part to delete.
+     */
+    function deletePart(indexToDelete) {
+        const currentParts = Array.from(outputContainer.querySelectorAll('.prompt-part-box')).map(el => el.dataset.originalContent);
+        
+        if (indexToDelete >= 0 && indexToDelete < currentParts.length) {
+            currentParts.splice(indexToDelete, 1); // Remove the part
+            const rebuiltPrompt = currentParts.join('\n\n');
+            promptInput.value = rebuiltPrompt;
+            updateCharCount();
+            updateWordCount();
+            updateTokenCount();
+            showMessage(`بخش ${indexToDelete + 1} حذف شد.`, 'success');
+            triggerAutoSplit(); // Re-split and re-render the output
+            saveCurrentPromptState(); // Save to history after deletion
+        } else {
+            showMessage('بخش نامعتبر برای حذف.', 'error');
+        }
+    }
+
+
     // --- AI Integration Logic ---
     let currentPartOriginalContent = null;
     let currentPartOriginalIndex = -1;
+    let currentlyHighlightedPartElement = null; // New: Reference to the DOM element being highlighted
 
     /**
      * Opens the AI response modal and prepares for AI interaction.
      * پنجره مدال پاسخ هوش مصنوعی را باز کرده و آن را برای تعامل با هوش مصنوعی آماده می‌کند.
      * @param {string} partContent - The content of the prompt part selected.
      * @param {number} partIndex - The index of the part in the current output for replacement.
+     * @param {HTMLElement} partElement - The DOM element of the part to highlight.
      */
-    function openAiModal(partContent, partIndex) {
+    function openAiModal(partContent, partIndex, partElement) {
+        if (currentlyHighlightedPartElement) {
+            currentlyHighlightedPartElement.classList.remove('active-ai-edit');
+        }
+        currentlyHighlightedPartElement = partElement;
+        currentlyHighlightedPartElement.classList.add('active-ai-edit');
+
         // Only clear aiPromptInput if it's a new part or a different part
         if (partContent !== currentPartOriginalContent) {
             aiPromptInput.value = '';
@@ -694,7 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * Sends a request to the Gemini API to refine a prompt part.
      * درخواستی را به API گیمی‌نی برای اصلاح یک بخش از پرامپت ارسال می‌کند.
      * @param {string} textToRefine - The text content to be refined by AI.
-     * @param {string} commandPrompt - The specific instruction for the AI (e.g., "Summarize", "Rephrase").
+     * @param {string} commandPrompt - The specific instruction for the AI (e.g., "Summarize", "Rephrase).
      */
     async function sendToAI(textToRefine, commandPrompt) {
         aiResponseTextarea.value = '';
@@ -752,6 +839,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listeners for AI modal buttons
     closeAiModalButton.addEventListener('click', () => {
         aiResponseModal.classList.remove('open');
+        if (currentlyHighlightedPartElement) {
+            currentlyHighlightedPartElement.classList.remove('active-ai-edit');
+            currentlyHighlightedPartElement = null;
+        }
         currentPartOriginalContent = null;
         currentPartOriginalIndex = -1;
     });
@@ -875,9 +966,8 @@ document.addEventListener('DOMContentLoaded', () => {
             updateWordCount();
             updateTokenCount(); // Update token count after insert
             triggerAutoSplit();
-            aiResponseModal.classList.remove('open');
-            currentPartOriginalContent = null;
-            currentPartOriginalIndex = -1;
+            closeAiModalButton.click(); // Close AI modal and remove highlight
+            saveCurrentPromptState(); // Save state after AI insertion
         } else {
             showMessage('پاسخ هوش مصنوعی برای درج خالی است.', 'error');
         }
@@ -931,6 +1021,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         // If the original part is somehow not found after reordering, reset.
                         currentPartOriginalContent = null;
                         currentPartOriginalIndex = -1;
+                        if (currentlyHighlightedPartElement) {
+                            currentlyHighlightedPartElement.classList.remove('active-ai-edit');
+                            currentlyHighlightedPartElement = null;
+                        }
                     }
                 }
             });
@@ -951,8 +1045,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCharCount();
         updateWordCount();
         updateTokenCount(); // Update token count after reorder
-        showMessage('ترتیب بخش‌ها تغییر کرد. می‌توانید پرامپپت اصلی را کپی کنید یا دوباره تقسیم کنید.', 'info');
+        showMessage('ترتیب بخش‌ها تغییر کرد. می‌توانید پرامپت اصلی را کپی کنید یا دوباره تقسیم کنید.', 'info');
         triggerAutoSplit();
+        saveCurrentPromptState(); // Save to history after reordering
     }
 
 
@@ -966,15 +1061,50 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function saveCurrentPromptState() {
         const currentContent = promptInput.value.trim();
-        if (currentContent === (promptHistory[0] ? promptHistory[0].content : '') && promptHistory.length > 0) {
-            return; // Avoid saving duplicate consecutive states, but allow initial save
+        // Prevent saving if current content is identical to the latest history entry
+        if (promptHistory.length > 0 && currentContent === promptHistory[0].content) {
+            return;
         }
         promptHistory.unshift({ content: currentContent, timestamp: new Date() });
         if (promptHistory.length > PROMPT_HISTORY_LIMIT) {
             promptHistory.pop(); // Remove oldest entry
         }
+        savePromptHistoryToLocalStorage(); // Persist history
         renderPromptHistoryList();
     }
+
+    /**
+     * Loads prompt history from local storage.
+     * تاریخچه پرامپت را از حافظه محلی بارگذاری می‌کند.
+     */
+    function loadPromptHistoryFromLocalStorage() {
+        try {
+            const storedHistory = localStorage.getItem('promptPartoHistory');
+            if (storedHistory) {
+                promptHistory = JSON.parse(storedHistory).map(entry => ({
+                    content: entry.content,
+                    timestamp: new Date(entry.timestamp) // Convert timestamp string back to Date object
+                }));
+            }
+        } catch (e) {
+            console.error('Error loading prompt history from localStorage:', e);
+            promptHistory = []; // Clear history on error
+        }
+    }
+
+    /**
+     * Saves prompt history to local storage.
+     * تاریخچه پرامپت را در حافظه محلی ذخیره می‌کند.
+     */
+    function savePromptHistoryToLocalStorage() {
+        try {
+            localStorage.setItem('promptPartoHistory', JSON.stringify(promptHistory));
+        } catch (e) {
+            console.error('Error saving prompt history to localStorage:', e);
+            showMessage('ذخیره تاریخچه با مشکل مواجه شد. حافظه مرورگر پر است؟', 'error');
+        }
+    }
+
 
     /**
      * Renders the prompt history list in the dropdown.
@@ -1262,7 +1392,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateTokenCount();
                 setTimeout(() => {
                     triggerAutoSplit();
-                    saveCurrentPromptState();
+                    saveCurrentPromptState(); // Save example as first history entry
                 }, 100);
                 showMessage('مثال با موفقیت بارگذاری شد.', 'success');
             } else {
@@ -1277,7 +1407,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    clearAllButton.addEventListener('click', clearAll);
+    clearAllButton.addEventListener('click', () => {
+        showConfirmModal('آیا مطمئنید می‌خواهید همه چیز را پاک کنید؟ این عمل برگشت‌ناپذیر است.', clearAll, () => showMessage('پاک کردن لغو شد.', 'info'));
+    });
     clearOutputOnlyButton.addEventListener('click', clearOutputOnly);
     exportTextButton.addEventListener('click', exportTextFile);
     exportJsonButton.addEventListener('click', exportJsonFile);
@@ -1303,7 +1435,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!loadPromptDropdownToggle.contains(event.target) && !loadPromptDropdownMenu.contains(event.target)) {
             loadPromptDropdownMenu.classList.add('hidden');
         }
-        if (!promptHistoryDropdownToggle.contains(event.target) && !promptHistoryDropdownMenu.contains(event.target)) {
+        // Only close history dropdown if not interacting with the modal
+        if (!promptHistoryDropdownToggle.contains(event.target) && !promptHistoryDropdownMenu.contains(event.target) && !confirmModal.contains(event.target)) {
             promptHistoryDropdownMenu.classList.add('hidden');
         }
     });
@@ -1432,7 +1565,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const promptName = prompt('لطفاً یک نام برای پرامپت خود وارد کنید:');
+        const promptName = prompt('لطفاً یک نام برای پرامپت خود وارد کنید:'); // Use browser prompt for simplicity for now
         if (!promptName || promptName.trim() === '') {
             showMessage('نام پرامپت نمی‌تواند خالی باشد.', 'error');
             return;
@@ -1442,17 +1575,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const existingPromptIndex = savedPrompts.findIndex(p => p.name === promptName.trim());
 
         if (existingPromptIndex !== -1) {
-            if (!confirm(`پرامپتی با نام "${promptName.trim()}" از قبل وجود دارد. آیا می‌خواهید آن را بازنویسی کنید؟`)) {
-                return;
-            }
-            savedPrompts[existingPromptIndex].content = promptContent;
+            showConfirmModal(
+                `پرامپتی با نام "${promptName.trim()}" از قبل وجود دارد. آیا می‌خواهید آن را بازنویسی کنید؟`,
+                () => { // On Confirm
+                    savedPrompts[existingPromptIndex].content = promptContent;
+                    savePromptsToLocalStorage(savedPrompts);
+                    renderSavedPromptsList();
+                    showMessage(`پرامپت "${promptName.trim()}" با موفقیت بازنویسی شد.`, 'success');
+                },
+                () => { // On Cancel
+                    showMessage('بازنویسی پرامپت لغو شد.', 'info');
+                },
+                'بازنویسی پرامپت'
+            );
         } else {
             savedPrompts.push({ name: promptName.trim(), content: promptContent });
+            savePromptsToLocalStorage(savedPrompts);
+            renderSavedPromptsList();
+            showMessage(`پرامپت "${promptName.trim()}" با موفقیت ذخیره شد.`, 'success');
         }
-        
-        savePromptsToLocalStorage(savedPrompts);
-        renderSavedPromptsList();
-        showMessage(`پرامپت "${promptName.trim()}" با موفقیت ذخیره شد.`, 'success');
     }
 
     /**
@@ -1496,11 +1637,18 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
             deleteButton.title = `حذف "${prompt.name}"`;
             deleteButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (confirm(`آیا مطمئنید می‌خواهید پرامپت "${prompt.name}" را حذف کنید؟`)) {
-                    deletePrompt(prompt.name);
-                    showMessage(`پرامپت "${prompt.name}" حذف شد.`, 'success');
-                }
+                e.stopPropagation(); // Prevent the parent loadLink click
+                showConfirmModal(
+                    `آیا مطمئنید می‌خواهید پرامپت "${prompt.name}" را حذف کنید؟`,
+                    () => { // On Confirm
+                        deletePromptFromStorage(prompt.name);
+                        showMessage(`پرامپت "${prompt.name}" حذف شد.`, 'success');
+                    },
+                    () => { // On Cancel
+                        showMessage('حذف پرامپت لغو شد.', 'info');
+                    },
+                    'حذف پرامپت'
+                );
             });
             div.appendChild(deleteButton);
 
@@ -1513,12 +1661,96 @@ document.addEventListener('DOMContentLoaded', () => {
      * یک پرامپت ذخیره‌شده را بر اساس نام از حافظه محلی حذف می‌کند.
      * @param {string} nameToDelete - The name of the prompt to delete.
      */
-    function deletePrompt(nameToDelete) {
+    function deletePromptFromStorage(nameToDelete) {
         let savedPrompts = getSavedPrompts();
         savedPrompts = savedPrompts.filter(p => p.name !== nameToDelete);
         savePromptsToLocalStorage(savedPrompts);
         renderSavedPromptsList();
     }
+
+
+    // --- Global Data Export/Import ---
+
+    /**
+     * Exports all PromptParto data (settings, saved prompts, history) to a JSON file.
+     * تمام داده‌های PromptParto (تنظیمات، پرامپت‌های ذخیره‌شده، تاریخچه) را به یک فایل JSON خروجی می‌دهد.
+     */
+    function exportAllUserData() {
+        const allData = {
+            settings: JSON.parse(localStorage.getItem('promptPartoSettings') || '{}'),
+            savedPrompts: JSON.parse(localStorage.getItem('promptPartoSavedPrompts') || '[]'),
+            promptHistory: JSON.parse(localStorage.getItem('promptPartoHistory') || '[]')
+        };
+        const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'promptparto_data.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showMessage('تمام داده‌های شما با موفقیت خروجی گرفته شد!', 'success');
+    }
+
+    /**
+     * Imports PromptParto data from a JSON file and applies it to local storage.
+     * داده‌های PromptParto را از یک فایل JSON وارد کرده و به حافظه محلی اعمال می‌کند.
+     */
+    function importAllUserData() {
+        importFileInput.click(); // Trigger hidden file input
+    }
+
+    importFileInput.addEventListener('change', (e) => {
+        const files = e.target.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type === 'application/json') {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const importedData = JSON.parse(event.target.result);
+                        showConfirmModal(
+                            'وارد کردن داده‌ها، داده‌های موجود را بازنویسی خواهد کرد. آیا مطمئنید؟',
+                            () => { // On Confirm
+                                if (importedData.settings) {
+                                    localStorage.setItem('promptPartoSettings', JSON.stringify(importedData.settings));
+                                }
+                                if (importedData.savedPrompts) {
+                                    localStorage.setItem('promptPartoSavedPrompts', JSON.stringify(importedData.savedPrompts));
+                                }
+                                if (importedData.promptHistory) {
+                                    localStorage.setItem('promptPartoHistory', JSON.stringify(importedData.promptHistory));
+                                }
+                                // Reload everything to reflect imported data
+                                loadSettings();
+                                loadAutoPrompt();
+                                loadPromptHistoryFromLocalStorage();
+                                renderSavedPromptsList();
+                                renderPromptHistoryList();
+                                triggerAutoSplit();
+                                showMessage('تمام داده‌ها با موفقیت وارد شدند!', 'success');
+                            },
+                            () => { // On Cancel
+                                showMessage('وارد کردن داده‌ها لغو شد.', 'info');
+                            },
+                            'وارد کردن داده‌ها'
+                        );
+                    } catch (parseError) {
+                        showMessage('خطا در خواندن فایل JSON. فایل معتبر نیست.', 'error');
+                        console.error('Error parsing imported JSON:', parseError);
+                    }
+                };
+                reader.onerror = () => {
+                    showMessage('خطا در خواندن فایل.', 'error');
+                };
+                reader.readAsText(file);
+            } else {
+                showMessage('لطفاً فقط فایل‌های JSON (.json) را انتخاب کنید.', 'error');
+            }
+        }
+        importFileInput.value = ''; // Clear the file input for next time
+    });
 
 
     // --- Keyboard Shortcuts ---
@@ -1555,6 +1787,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.preventDefault();
                     clearOutputOnlyButton.click();
                     break;
+                case 'd': // Ctrl+D for Dark Mode Toggle
+                    e.preventDefault();
+                    darkModeToggle.click();
+                    break;
+                case 'h': // Ctrl+H for History Dropdown
+                    e.preventDefault();
+                    promptHistoryDropdownToggle.click();
+                    break;
             }
         }
     });
@@ -1564,6 +1804,7 @@ document.addEventListener('DOMContentLoaded', () => {
     applyStateFromUrl(); // Try to apply state from URL first
     loadSettings(); // Load other settings from localStorage
     loadAutoPrompt(); // Load auto-saved draft
+    loadPromptHistoryFromLocalStorage(); // Load history from local storage
     startAutoSave(); // Start auto-save interval
 
     updateCharCount();
@@ -1571,6 +1812,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateTokenCount(); // Initial update of token count
 
     renderSavedPromptsList();
+    renderPromptHistoryList(); // Render history on load
 
     // Disable buttons initially (will be enabled by renderOutput if parts exist)
     copyAllButton.disabled = true;
@@ -1582,9 +1824,14 @@ document.addEventListener('DOMContentLoaded', () => {
     clearOutputOnlyButton.disabled = true;
     clearOutputOnlyButton.classList.add('opacity-50', 'cursor-not-allowed');
 
+    // Add event listeners for new data management buttons
+    exportAllDataButton.addEventListener('click', exportAllUserData);
+    importAllDataButton.addEventListener('click', importAllUserData);
+
+
     // Trigger an initial auto-split if there's content (either from URL or pre-existing)
     if (promptInput.value.trim() !== '') {
         triggerAutoSplit();
-        saveCurrentPromptState(); // Save the initial state to history
+        saveCurrentPromptState(); // Save the initial state to history (if not empty from load)
     }
 });
