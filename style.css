@@ -52,10 +52,18 @@ body.dark .drag-drop-zone.drag-over {
     padding: 1.5rem; /* p-6 */
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
     transition: transform 0.2s ease-in-out, background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+    /* Styles for draggable items */
+    cursor: grab; /* Indicate draggable */
 }
 
 .prompt-part-box:hover {
     transform: translateY(-3px); /* Subtle lift effect on hover */
+}
+
+/* Style for item being dragged */
+.prompt-part-box.dragging {
+    opacity: 0.5;
+    border: 2px dashed #6366f1; /* indigo-500 */
 }
 
 .prompt-part-box pre {
@@ -75,7 +83,8 @@ body.dark .drag-drop-zone.drag-over {
     transition: background-color 0.3s, border-color 0.3s, color 0.3s;
 }
 
-.prompt-part-box .copy-button {
+.prompt-part-box .copy-button,
+.prompt-part-box .ai-button { /* Apply similar styles to AI button */
     background-color: #6366f1; /* indigo-500 */
     color: #ffffff;
     font-weight: 500; /* font-medium */
@@ -85,16 +94,19 @@ body.dark .drag-drop-zone.drag-over {
     transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out, opacity 0.2s;
 }
 
-.prompt-part-box .copy-button:hover {
+.prompt-part-box .copy-button:hover,
+.prompt-part-box .ai-button:hover {
     background-color: #4f46e5; /* indigo-600 */
     transform: translateY(-1px);
 }
 
-.prompt-part-box .copy-button:active {
+.prompt-part-box .copy-button:active,
+.prompt-part-box .ai-button:active {
     transform: translateY(0);
 }
 
-.prompt-part-box .copy-button i {
+.prompt-part-box .copy-button i,
+.prompt-part-box .ai-button i {
     margin-left: 0.5rem; /* Space between icon and text */
 }
 
@@ -236,3 +248,73 @@ body.dark #messageBox.bg-blue-100 {
     color: #90cdf4;
 }
 
+/* Character Limit Bar */
+.char-limit-bar-container {
+    width: 100%;
+    height: 6px;
+    background-color: #e2e8f0; /* gray-200 */
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.char-limit-bar {
+    height: 100%;
+    background-color: #34d399; /* green-500 */
+    width: 0%;
+    transition: width 0.3s ease-in-out, background-color 0.3s ease-in-out;
+}
+
+.char-limit-bar.warning {
+    background-color: #f59e0b; /* yellow-500 */
+}
+
+.char-limit-bar.danger {
+    background-color: #ef4444; /* red-500 */
+}
+
+/* Dark Mode for Character Limit Bar */
+body.dark .char-limit-bar-container {
+    background-color: #4a5568; /* gray-600 */
+}
+body.dark .char-limit-bar {
+    background-color: #10b981; /* green-600 dark */
+}
+body.dark .char-limit-bar.warning {
+    background-color: #fcd34d; /* yellow-400 dark */
+}
+body.dark .char-limit-bar.danger {
+    background-color: #dc2626; /* red-600 dark */
+}
+
+/* AI Modal Styles */
+#aiResponseModal {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s;
+}
+
+#aiResponseModal.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* AI Action Buttons within modal */
+.ai-action-btn {
+    transition: background-color 0.2s, color 0.2s;
+}
+
+/* Styling for drag-and-drop reordering placeholder */
+.drag-placeholder {
+    height: 100px; /* Or match average prompt-part-box height */
+    background-color: #cbd5e0; /* gray-300 */
+    border: 2px dashed #6366f1; /* indigo-500 */
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.2s ease-in-out;
+}
+
+body.dark .drag-placeholder {
+    background-color: #4a5568; /* gray-600 */
+    border-color: #90cdf4; /* blue-300 */
+}

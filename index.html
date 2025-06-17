@@ -38,9 +38,14 @@
                         placeholder="پرامپت طولانی خود را اینجا وارد کنید یا فایل متنی را بکشید و رها کنید..."
                         aria-label="Prompt Input"
                     ></textarea>
-                    <p id="charCount" class="text-sm text-gray-500 dark:text-gray-400 mt-2 text-left">
-                        کاراکترها: 0
-                    </p>
+                    <div class="flex justify-between text-sm mt-2">
+                        <p id="charCount" class="text-gray-500 dark:text-gray-400 text-left">
+                            کاراکترها: 0
+                        </p>
+                        <p id="wordCount" class="text-gray-500 dark:text-gray-400 text-right">
+                            کلمات: 0
+                        </p>
+                    </div>
                 </div>
                 <div class="flex flex-col gap-3 w-full md:w-1/4">
                     <button
@@ -151,6 +156,15 @@
                             aria-label="Suffix for each part"
                         >
                     </div>
+                    <div class="flex items-center flex-wrap gap-2 col-span-1 md:col-span-2">
+                        <input
+                            type="checkbox"
+                            id="includeDelimitersInOutput"
+                            class="ml-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700"
+                            aria-label="Include Delimiters in Output"
+                        >
+                        <label for="includeDelimitersInOutput" class="text-gray-700 dark:text-gray-300">شامل جداکننده‌ها در خروجی (برای جداکننده سفارشی و Regex)</label>
+                    </div>
                 </div>
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -233,6 +247,23 @@
                 </button>
             </div>
             <div class="mt-4">
+                <p class="text-gray-700 dark:text-gray-300 mb-2">پرامپت برای هوش مصنوعی:</p>
+                <textarea
+                    id="aiPromptInput"
+                    class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 min-h-[100px] resize-y mb-4"
+                    aria-label="AI Prompt Input"
+                    placeholder="دستورالعمل‌های خود را برای هوش مصنوعی اینجا بنویسید (مثال: این متن را خلاصه کن)..."
+                ></textarea>
+
+                <div class="flex flex-wrap gap-2 mb-4 justify-center">
+                    <button id="aiSummarizeButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">خلاصه کن</button>
+                    <button id="aiRephraseButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">بازنویسی کن</button>
+                    <button id="aiElaborateButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">توضیح بده</button>
+                    <button id="aiSendToAIButton" class="ai-action-btn bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm transition-colors duration-200">
+                        <i class="fas fa-paper-plane ml-2"></i> ارسال به هوش مصنوعی
+                    </button>
+                </div>
+
                 <div id="aiLoadingSpinner" class="flex justify-center items-center py-8 hidden">
                     <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
                     <p class="text-lg text-gray-600 dark:text-gray-300 mr-4">در حال پردازش...</p>
