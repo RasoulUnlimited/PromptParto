@@ -210,6 +210,36 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- New: History and Share Buttons -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
+                     <div class="relative inline-block text-left z-10">
+                        <button
+                            id="promptHistoryDropdownToggle"
+                            class="inline-flex justify-center w-full rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            aria-label="Prompt History"
+                        >
+                            <i class="fas fa-history mr-2"></i> تاریخچه پرامپت
+                            <i class="fas fa-chevron-down ml-2 -mr-1"></i>
+                        </button>
+                        <div id="promptHistoryDropdownMenu" class="origin-top-right absolute right-0 mt-2 w-72 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none hidden max-h-60 overflow-y-auto" role="menu" aria-orientation="vertical" aria-labelledby="promptHistoryDropdownToggle">
+                            <div class="py-1" role="none" id="historyList">
+                                <!-- Prompt history will be injected here -->
+                                <p class="text-center text-gray-500 dark:text-gray-400 p-2">هیچ تاریخچه‌ای وجود ندارد.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <button
+                        id="shareButton"
+                        class="bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
+                        aria-label="Share Current Prompt and Settings"
+                    >
+                        <i class="fas fa-share-alt mr-2"></i> اشتراک‌گذاری
+                    </button>
+                </div>
+
             </div>
 
             <!-- Dark Mode Toggle -->
@@ -247,10 +277,10 @@
                 </button>
             </div>
             <div class="mt-4">
-                <p class="text-gray-700 dark:text-gray-300 mb-2">پرامپت برای هوش مصنوعی:</p>
+                <p class="text-gray-700 dark:text-gray-300 mb-2">دستورالعمل برای هوش مصنوعی:</p>
                 <textarea
                     id="aiPromptInput"
-                    class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 min-h-[100px] resize-y mb-4"
+                    class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 min-h-[100px] resize-y mb-4 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                     aria-label="AI Prompt Input"
                     placeholder="دستورالعمل‌های خود را برای هوش مصنوعی اینجا بنویسید (مثال: این متن را خلاصه کن)..."
                 ></textarea>
@@ -259,6 +289,8 @@
                     <button id="aiSummarizeButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">خلاصه کن</button>
                     <button id="aiRephraseButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">بازنویسی کن</button>
                     <button id="aiElaborateButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">توضیح بده</button>
+                    <button id="aiTranslateEnButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">ترجمه به انگلیسی</button>
+                    <button id="aiTranslateFaButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">ترجمه به فارسی</button>
                     <button id="aiSendToAIButton" class="ai-action-btn bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm transition-colors duration-200">
                         <i class="fas fa-paper-plane ml-2"></i> ارسال به هوش مصنوعی
                     </button>
@@ -270,7 +302,7 @@
                 </div>
                 <textarea
                     id="aiResponseTextarea"
-                    class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 min-h-[200px] resize-y"
+                    class="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 min-h-[200px] resize-y focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                     readonly
                     aria-label="AI Response"
                 ></textarea>
