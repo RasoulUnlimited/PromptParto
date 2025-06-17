@@ -1319,8 +1319,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showMessage('پرامپت و تنظیمات از لینک بارگذاری شد!', 'info');
                 history.replaceState(null, '', window.location.pathname); // Clean up URL
                 triggerAutoSplit();
-            }
-            catch (e) {
+            } catch (e) {
                 console.error('Error decoding/applying shared URL data:', e);
                 showMessage('خطا در بارگذاری اطلاعات از لینک اشتراک‌گذاری.', 'error');
             }
@@ -1337,7 +1336,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     dragDropZone.addEventListener('dragleave', (e) => {
-        // Check if the relatedTarget is outside the dragDropZone entirely
+        // Only remove drag-over if leaving the main drop zone, not just child elements
         if (!dragDropZone.contains(e.relatedTarget)) {
             dragDropZone.classList.remove('drag-over');
             dragDropOverlay.style.opacity = '0';
