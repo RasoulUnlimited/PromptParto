@@ -79,7 +79,7 @@ body.dark .drag-drop-zone.drag-over {
     box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5);
 }
 
-/* New: Drag and Drop Overlay styles */
+/* Drag and Drop Overlay styles */
 #dragDropOverlay {
     pointer-events: none; /* Default to none so textarea is clickable */
     opacity: 0; /* Hidden by default */
@@ -87,14 +87,9 @@ body.dark .drag-drop-zone.drag-over {
     border: 3px dashed #3b82f6; /* Dashed blue border */
     transition: opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
     z-index: 10; /* Ensure it's above the textarea but below other UI elements */
-    display: flex; /* Use flexbox for centering content */
-    flex-direction: column; /* Stack icon and text vertically */
-    align-items: center; /* Center horizontally */
-    justify-content: center; /* Center vertically */
 }
 
-/* Make overlay active only when a drag event is over the zone */
-.drag-drop-zone.drag-over + #dragDropOverlay {
+#dragDropOverlay.active {
     opacity: 1; /* Show when active */
     pointer-events: auto; /* Make it clickable/interactive when active */
 }
@@ -135,6 +130,18 @@ body.dark .prompt-part-box {
     cursor: grabbing; /* Indicate currently dragging */
 }
 
+/* New: Highlight for AI edited part */
+.prompt-part-box.active-ai-edit {
+    border: 2px solid #3b82f6; /* Blue border to indicate active AI editing */
+    box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.4); /* Stronger glow */
+}
+
+body.dark .prompt-part-box.active-ai-edit {
+    border-color: #60a5fa; /* Lighter blue for dark mode */
+    box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.4);
+}
+
+
 .prompt-part-box pre {
     white-space: pre-wrap; /* Preserve whitespace and break long lines */
     word-wrap: break-word; /* Ensure long words break */
@@ -172,12 +179,10 @@ body.dark .prompt-part-box pre {
 #loadPromptDropdownToggle,
 .delete-prompt-btn,
 #darkModeToggle,
-#promptHistoryDropdownToggle, /* Apply to new history button */
-#shareButton, /* Apply to new share button */
-.ai-action-btn, /* Apply to AI modal action buttons */
-#clearHistoryButton, /* New: Clear History Button */
-#cancelConfirmationButton, /* New: Confirmation Modal buttons */
-#confirmActionButton
+#promptHistoryDropdownToggle,
+#shareButton,
+#exportAllDataButton, /* New button */
+#importAllDataButton /* New button */
  {
     font-weight: 500; /* font-medium */
     padding: 0.75rem 1.5rem; /* py-3 px-6 for main buttons, adjust if needed */
@@ -204,12 +209,10 @@ body.dark .prompt-part-box pre {
 #loadPromptDropdownToggle:hover,
 .delete-prompt-btn:hover,
 #darkModeToggle:hover,
-#promptHistoryDropdownToggle:hover, /* Apply to new history button */
-#shareButton:hover, /* Apply to new share button */
-.ai-action-btn:hover, /* Apply to AI modal action buttons */
-#clearHistoryButton:hover, /* New: Clear History Button */
-#cancelConfirmationButton:hover, /* New: Confirmation Modal buttons */
-#confirmActionButton:hover
+#promptHistoryDropdownToggle:hover,
+#shareButton:hover,
+#exportAllDataButton:hover, /* New button */
+#importAllDataButton:hover /* New button */
  {
     transform: translateY(-2px); /* Consistent lift on hover */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Deeper shadow on hover */
@@ -229,12 +232,10 @@ body.dark .prompt-part-box pre {
 #loadPromptDropdownToggle:active,
 .delete-prompt-btn:active,
 #darkModeToggle:active,
-#promptHistoryDropdownToggle:active, /* Apply to new history button */
-#shareButton:active, /* Apply to new share button */
-.ai-action-btn:active, /* Apply to AI modal action buttons */
-#clearHistoryButton:active, /* New: Clear History Button */
-#cancelConfirmationButton:active, /* New: Confirmation Modal buttons */
-#confirmActionButton:active
+#promptHistoryDropdownToggle:active,
+#shareButton:active,
+#exportAllDataButton:active, /* New button */
+#importAllDataButton:active /* New button */
  {
     transform: translateY(1px); /* Press down effect */
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Flatter shadow when pressed */
@@ -250,13 +251,25 @@ body.dark .prompt-part-box pre {
 #exportJsonButton { background-color: #0d9488; color: #fff; } /* teal-600 */
 #savePromptButton { background-color: #4f46e5; color: #fff; } /* indigo-600 */
 #loadPromptDropdownToggle { background-color: #fff; color: #374151; border: 1px solid #d1d5db; } /* white with gray text */
-.delete-prompt-btn { background-color: #ef4444; color: #fff; padding: 0.5rem 0.75rem; border-radius: 0.375rem; } /* red-500, smaller */
+/* Specific style for part delete button */
+.prompt-part-box .bg-red-500 {
+    background-color: #ef4444; /* red-500 */
+    color: #fff;
+    padding: 0.5rem 0.75rem; /* Smaller padding for inline button */
+    border-radius: 0.375rem; /* rounded-md */
+    text-shadow: none; /* Remove strong text shadow for smaller buttons */
+}
+.prompt-part-box .bg-red-500:hover {
+    background-color: #dc2626; /* red-700 */
+}
+.prompt-part-box .bg-red-500:active {
+    background-color: #b91c1c; /* red-800 */
+}
+
 #darkModeToggle { background-color: #374151; color: #fff; } /* gray-700 */
 #promptHistoryDropdownToggle { background-color: #fff; color: #374151; border: 1px solid #d1d5db; } /* white with gray text */
 #shareButton { background-color: #a855f7; color: #fff; } /* purple-500 */
-#clearHistoryButton { background-color: #dc2626; color: #fff; } /* Red for destructive action */
-#cancelConfirmationButton { background-color: #e2e8f0; color: #374151; } /* Light gray */
-#confirmActionButton { background-color: #ef4444; color: #fff; } /* Red for confirmation */
+#exportAllDataButton, #importAllDataButton { background-color: #4a5568; color: #fff; } /* gray-600 */
 
 
 /* Dark Mode specific button colors */
@@ -270,14 +283,18 @@ body.dark #exportJsonButton { background-color: #14b8a6; } /* teal-500 */
 body.dark #savePromptButton { background-color: #6366f1; } /* indigo-500 */
 body.dark #loadPromptDropdownToggle { background-color: #2d3748; color: #e2e8f0; border-color: #4a5568; } /* gray-800 */
 body.dark #loadPromptDropdownToggle:hover { background-color: #4a5568; } /* gray-600 */
-body.dark .delete-prompt-btn { background-color: #ef4444; }
+body.dark .prompt-part-box .bg-red-500 {
+    background-color: #b91c1c; /* Darker red for dark mode */
+}
+body.dark .prompt-part-box .bg-red-500:hover {
+    background-color: #991b1b;
+}
+
 body.dark #darkModeToggle { background-color: #4a5568; } /* gray-600 */
 body.dark #promptHistoryDropdownToggle { background-color: #2d3748; color: #e2e8f0; border-color: #4a5568; } /* gray-800 */
 body.dark #promptHistoryDropdownToggle:hover { background-color: #4a5568; }
 body.dark #shareButton { background-color: #c084fc; } /* purple-400 */
-body.dark #clearHistoryButton { background-color: #b91c1c; } /* Darker red */
-body.dark #cancelConfirmationButton { background-color: #4a5568; color: #e2e8f0; } /* Darker gray */
-body.dark #confirmActionButton { background-color: #dc2626; } /* Darker red for confirmation */
+body.dark #exportAllDataButton, body.dark #importAllDataButton { background-color: #6b7280; } /* gray-500 */
 
 
 /* Styles for message box types (success/error/info) */
@@ -483,14 +500,14 @@ header {
     animation: gradientAnimation 15s ease infinite; /* Slow, continuous animation */
 }
 
-/* Custom Confirmation Modal styles */
-#confirmationModal {
+/* Custom Confirmation Modal Styles */
+#confirmModal {
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease-in-out, visibility 0.3s;
 }
 
-#confirmationModal:not(.hidden) {
+#confirmModal:not(.hidden) {
     opacity: 1;
     visibility: visible;
 }
