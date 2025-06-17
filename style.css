@@ -87,9 +87,14 @@ body.dark .drag-drop-zone.drag-over {
     border: 3px dashed #3b82f6; /* Dashed blue border */
     transition: opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
     z-index: 10; /* Ensure it's above the textarea but below other UI elements */
+    display: flex; /* Use flexbox for centering content */
+    flex-direction: column; /* Stack icon and text vertically */
+    align-items: center; /* Center horizontally */
+    justify-content: center; /* Center vertically */
 }
 
-#dragDropOverlay.active {
+/* Make overlay active only when a drag event is over the zone */
+.drag-drop-zone.drag-over + #dragDropOverlay {
     opacity: 1; /* Show when active */
     pointer-events: auto; /* Make it clickable/interactive when active */
 }
@@ -501,13 +506,13 @@ header {
 }
 
 /* Custom Confirmation Modal Styles */
-#confirmModal {
+#confirmationModal {
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease-in-out, visibility 0.3s;
 }
 
-#confirmModal:not(.hidden) {
+#confirmationModal:not(.hidden) {
     opacity: 1;
     visibility: visible;
 }
