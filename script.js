@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const messageText = document.getElementById('messageText');
     const charCountDisplay = document.getElementById('charCount');
     const wordCountDisplay = document.getElementById('wordCount');
-    const tokenCountDisplay = document.getElementById('tokenCount'); // New: Token count display
-    const autoSaveStatus = document.getElementById('autoSaveStatus'); // New: Auto-save status display
+    const tokenCountDisplay = document.getElementById('tokenCount');
+    const autoSaveStatus = document.getElementById('autoSaveStatus');
     const maxCharsPerPartInput = document.getElementById('maxCharsPerPart');
     const splitStrategySelect = document.getElementById('splitStrategy');
     const customDelimiterContainer = document.getElementById('customDelimiterContainer');
@@ -48,21 +48,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const aiSummarizeButton = document.getElementById('aiSummarizeButton');
     const aiRephraseButton = document.getElementById('aiRephraseButton');
     const aiElaborateButton = document.getElementById('aiElaborateButton');
-    const aiConciseButton = document.getElementById('aiConciseButton'); // New: Concise button
-    const aiExpandButton = document.getElementById('aiExpandButton');   // New: Expand button
-    const aiToneFormalButton = document.getElementById('aiToneFormalButton'); // New: Formal Tone button
-    const aiToneInformalButton = document.getElementById('aiToneInformalButton'); // New: Informal Tone button
+    const aiConciseButton = document.getElementById('aiConciseButton');
+    const aiExpandButton = document.getElementById('aiExpandButton');
+    const aiToneFormalButton = document.getElementById('aiToneFormalButton');
+    const aiToneInformalButton = document.getElementById('aiToneInformalButton');
     const aiTranslateEnButton = document.getElementById('aiTranslateEnButton');
     const aiTranslateFaButton = document.getElementById('aiTranslateFaButton');
     const aiSendToAIButton = document.getElementById('aiSendToAIButton');
     const copyAiResponseButton = document.getElementById('copyAiResponseButton');
     const insertAiResponseButton = document.getElementById('insertAiResponseButton');
 
+    // Drag and Drop elements
+    const dragDropZone = promptInput; // The textarea is also the drag-drop zone
+    const dragDropOverlay = document.getElementById('dragDropOverlay');
+    const fileInput = document.getElementById('fileInput');
+
     // Default constants for splitting logic
     let MAX_CHARS_PER_PART = parseInt(maxCharsPerPartInput.value, 10) || 3800;
     const MIN_CHARS_FOR_NEW_SPLIT = 100;
 
-    // New: Auto-save interval
+    // Auto-save interval
     const AUTO_SAVE_INTERVAL = 5000; // Save every 5 seconds
 
     // --- Settings Management ---
@@ -946,7 +951,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateCharCount();
         updateWordCount();
         updateTokenCount(); // Update token count after reorder
-        showMessage('ترتیب بخش‌ها تغییر کرد. می‌توانید پرامپت اصلی را کپی کنید یا دوباره تقسیم کنید.', 'info');
+        showMessage('ترتیب بخش‌ها تغییر کرد. می‌توانید پرامپپت اصلی را کپی کنید یا دوباره تقسیم کنید.', 'info');
         triggerAutoSplit();
     }
 
@@ -961,8 +966,8 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function saveCurrentPromptState() {
         const currentContent = promptInput.value.trim();
-        if (currentContent === (promptHistory[0] ? promptHistory[0].content : '')) {
-            return; // Avoid saving duplicate consecutive states
+        if (currentContent === (promptHistory[0] ? promptHistory[0].content : '') && promptHistory.length > 0) {
+            return; // Avoid saving duplicate consecutive states, but allow initial save
         }
         promptHistory.unshift({ content: currentContent, timestamp: new Date() });
         if (promptHistory.length > PROMPT_HISTORY_LIMIT) {
@@ -1025,6 +1030,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Auto-Save Prompt Logic ---
+    let autoSaveTimer;
+    function startAutoSave() {
+        if (autoSaveTimer) clearInterval(autoSaveTimer);
+        autoSaveTimer = setInterval(saveAutoPrompt, AUTO_SAVE_INTERVAL);
+    }
+
     function saveAutoPrompt() {
         const currentContent = promptInput.value;
         try {
@@ -1053,8 +1064,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateWordCount();
                 updateTokenCount();
                 showMessage('پرامپت ذخیره شده خودکار بارگذاری شد.', 'info');
-                // Don't save this to history immediately, as it's a load, not a user edit.
-                // It will be saved when user starts typing.
             }
         } catch (e) {
             console.error('Error loading auto-saved prompt:', e);
@@ -1070,7 +1079,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function generateShareableUrl() {
         const dataToShare = {
             prompt: promptInput.value,
-            settings: settings
+            settings: settings // 'settings' object holds all current config
         };
         const encodedData = btoa(JSON.stringify(dataToShare));
         const shareUrl = `${window.location.origin}${window.location.pathname}?promptData=${encodedData}`;
@@ -1090,13 +1099,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (encodedData) {
             try {
                 const decodedData = JSON.parse(atob(encodedData));
-                if (decodedData.prompt !== undefined) { // Check for undefined to allow empty strings
+                if (decodedData.prompt !== undefined) {
                     promptInput.value = decodedData.prompt;
                     updateCharCount();
                     updateWordCount();
                     updateTokenCount();
-                    // Clear history if loading from URL to avoid confusion
-                    promptHistory = [];
+                    promptHistory = []; // Clear history if loading from URL to avoid confusion
                     renderPromptHistoryList();
                 }
                 if (decodedData.settings) {
@@ -1112,11 +1120,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     partPrefixInput.value = settings.partPrefix;
                     partSuffixInput.value = settings.partSuffix;
                     includeDelimitersInOutputCheckbox.checked = settings.includeDelimitersInOutput;
-                    applyTheme(settings.theme); // Apply theme from URL
+                    applyTheme(settings.theme);
                 }
                 showMessage('پرامپت و تنظیمات از لینک بارگذاری شد!', 'info');
-                // Remove the URL parameter to clean up the URL bar
-                history.replaceState(null, '', window.location.pathname);
+                history.replaceState(null, '', window.location.pathname); // Clean up URL
                 triggerAutoSplit();
             } catch (e) {
                 console.error('Error decoding/applying shared URL data:', e);
@@ -1124,6 +1131,87 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+
+
+    // --- Drag and Drop File Handling ---
+    dragDropZone.addEventListener('dragover', (e) => {
+        e.preventDefault(); // Prevent default to allow drop
+        dragDropZone.classList.add('drag-over');
+        dragDropOverlay.style.opacity = '1';
+        dragDropOverlay.style.pointerEvents = 'auto'; // Make overlay interactive
+    });
+
+    dragDropZone.addEventListener('dragleave', (e) => {
+        // Only remove drag-over if leaving the main drop zone, not just child elements
+        if (!dragDropZone.contains(e.relatedTarget)) {
+            dragDropZone.classList.remove('drag-over');
+            dragDropOverlay.style.opacity = '0';
+            dragDropOverlay.style.pointerEvents = 'none';
+        }
+    });
+
+    dragDropZone.addEventListener('drop', (e) => {
+        e.preventDefault(); // Prevent default file open
+        dragDropZone.classList.remove('drag-over');
+        dragDropOverlay.style.opacity = '0';
+        dragDropOverlay.style.pointerEvents = 'none';
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type === 'text/plain') {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    promptInput.value = event.target.result;
+                    updateCharCount();
+                    updateWordCount();
+                    updateTokenCount();
+                    triggerAutoSplit();
+                    saveCurrentPromptState();
+                    saveAutoPrompt();
+                    showMessage('فایل متنی با موفقیت بارگذاری شد.', 'success');
+                };
+                reader.onerror = () => {
+                    showMessage('خطا در خواندن فایل.', 'error');
+                };
+                reader.readAsText(file);
+            } else {
+                showMessage('لطفاً فقط فایل‌های متنی (.txt) را رها کنید.', 'error');
+            }
+        }
+    });
+
+    // Handle file input click fallback (though drag-drop is primary)
+    fileInput.addEventListener('change', (e) => {
+        const files = e.target.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (file.type === 'text/plain') {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    promptInput.value = event.target.result;
+                    updateCharCount();
+                    updateWordCount();
+                    updateTokenCount();
+                    triggerAutoSplit();
+                    saveCurrentPromptState();
+                    saveAutoPrompt();
+                    showMessage('فایل متنی با موفقیت بارگذاری شد.', 'success');
+                };
+                reader.onerror = () => {
+                    showMessage('خطا در خواندن فایل.', 'error');
+                };
+                reader.readAsText(file);
+            } else {
+                showMessage('لطفاً فقط فایل‌های متنی (.txt) را انتخاب کنید.', 'error');
+            }
+        }
+    });
+    
+    // Allow clicking the overlay to open file dialog (for accessibility/fallback)
+    dragDropOverlay.addEventListener('click', () => {
+        fileInput.click();
+    });
 
 
     // --- Event Listeners ---
@@ -1171,7 +1259,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 promptInput.value = data.examplePrompt;
                 updateCharCount();
                 updateWordCount();
-                updateTokenCount(); // Update token count
+                updateTokenCount();
                 setTimeout(() => {
                     triggerAutoSplit();
                     saveCurrentPromptState();
@@ -1354,8 +1442,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const existingPromptIndex = savedPrompts.findIndex(p => p.name === promptName.trim());
 
         if (existingPromptIndex !== -1) {
-            // Using a custom modal/dialog is preferred over confirm() due to iframe restrictions.
-            // For now, using confirm() as a temporary solution as requested in initial instructions.
             if (!confirm(`پرامپتی با نام "${promptName.trim()}" از قبل وجود دارد. آیا می‌خواهید آن را بازنویسی کنید؟`)) {
                 return;
             }
@@ -1478,6 +1564,7 @@ document.addEventListener('DOMContentLoaded', () => {
     applyStateFromUrl(); // Try to apply state from URL first
     loadSettings(); // Load other settings from localStorage
     loadAutoPrompt(); // Load auto-saved draft
+    startAutoSave(); // Start auto-save interval
 
     updateCharCount();
     updateWordCount();
