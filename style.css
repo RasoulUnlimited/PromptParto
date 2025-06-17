@@ -79,6 +79,32 @@ body.dark .drag-drop-zone.drag-over {
     box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.5);
 }
 
+/* New: Drag and Drop Overlay styles */
+#dragDropOverlay {
+    pointer-events: none; /* Default to none so textarea is clickable */
+    opacity: 0; /* Hidden by default */
+    background-color: rgba(59, 130, 246, 0.1); /* Light blue transparent background */
+    border: 3px dashed #3b82f6; /* Dashed blue border */
+    transition: opacity 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+    z-index: 10; /* Ensure it's above the textarea but below other UI elements */
+    display: flex; /* Use flexbox for centering content */
+    flex-direction: column; /* Stack icon and text vertically */
+    align-items: center; /* Center horizontally */
+    justify-content: center; /* Center vertically */
+}
+
+/* Make overlay active only when a drag event is over the zone */
+.drag-drop-zone.drag-over + #dragDropOverlay {
+    opacity: 1; /* Show when active */
+    pointer-events: auto; /* Make it clickable/interactive when active */
+}
+
+body.dark #dragDropOverlay {
+    background-color: rgba(96, 165, 250, 0.15); /* Darker transparent blue for dark mode */
+    border-color: #60a5fa;
+    color: #90cdf4; /* Lighter text color */
+}
+
 
 /* Styling for generated prompt part boxes */
 .prompt-part-box {
@@ -147,7 +173,11 @@ body.dark .prompt-part-box pre {
 .delete-prompt-btn,
 #darkModeToggle,
 #promptHistoryDropdownToggle, /* Apply to new history button */
-#shareButton /* Apply to new share button */
+#shareButton, /* Apply to new share button */
+.ai-action-btn, /* Apply to AI modal action buttons */
+#clearHistoryButton, /* New: Clear History Button */
+#cancelConfirmationButton, /* New: Confirmation Modal buttons */
+#confirmActionButton
  {
     font-weight: 500; /* font-medium */
     padding: 0.75rem 1.5rem; /* py-3 px-6 for main buttons, adjust if needed */
@@ -175,7 +205,11 @@ body.dark .prompt-part-box pre {
 .delete-prompt-btn:hover,
 #darkModeToggle:hover,
 #promptHistoryDropdownToggle:hover, /* Apply to new history button */
-#shareButton:hover /* Apply to new share button */
+#shareButton:hover, /* Apply to new share button */
+.ai-action-btn:hover, /* Apply to AI modal action buttons */
+#clearHistoryButton:hover, /* New: Clear History Button */
+#cancelConfirmationButton:hover, /* New: Confirmation Modal buttons */
+#confirmActionButton:hover
  {
     transform: translateY(-2px); /* Consistent lift on hover */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Deeper shadow on hover */
@@ -196,7 +230,11 @@ body.dark .prompt-part-box pre {
 .delete-prompt-btn:active,
 #darkModeToggle:active,
 #promptHistoryDropdownToggle:active, /* Apply to new history button */
-#shareButton:active /* Apply to new share button */
+#shareButton:active, /* Apply to new share button */
+.ai-action-btn:active, /* Apply to AI modal action buttons */
+#clearHistoryButton:active, /* New: Clear History Button */
+#cancelConfirmationButton:active, /* New: Confirmation Modal buttons */
+#confirmActionButton:active
  {
     transform: translateY(1px); /* Press down effect */
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Flatter shadow when pressed */
@@ -216,6 +254,9 @@ body.dark .prompt-part-box pre {
 #darkModeToggle { background-color: #374151; color: #fff; } /* gray-700 */
 #promptHistoryDropdownToggle { background-color: #fff; color: #374151; border: 1px solid #d1d5db; } /* white with gray text */
 #shareButton { background-color: #a855f7; color: #fff; } /* purple-500 */
+#clearHistoryButton { background-color: #dc2626; color: #fff; } /* Red for destructive action */
+#cancelConfirmationButton { background-color: #e2e8f0; color: #374151; } /* Light gray */
+#confirmActionButton { background-color: #ef4444; color: #fff; } /* Red for confirmation */
 
 
 /* Dark Mode specific button colors */
@@ -234,6 +275,9 @@ body.dark #darkModeToggle { background-color: #4a5568; } /* gray-600 */
 body.dark #promptHistoryDropdownToggle { background-color: #2d3748; color: #e2e8f0; border-color: #4a5568; } /* gray-800 */
 body.dark #promptHistoryDropdownToggle:hover { background-color: #4a5568; }
 body.dark #shareButton { background-color: #c084fc; } /* purple-400 */
+body.dark #clearHistoryButton { background-color: #b91c1c; } /* Darker red */
+body.dark #cancelConfirmationButton { background-color: #4a5568; color: #e2e8f0; } /* Darker gray */
+body.dark #confirmActionButton { background-color: #dc2626; } /* Darker red for confirmation */
 
 
 /* Styles for message box types (success/error/info) */
@@ -437,4 +481,16 @@ body.dark .drag-placeholder {
 header {
     background-size: 200% 200%; /* Make gradient larger than container */
     animation: gradientAnimation 15s ease infinite; /* Slow, continuous animation */
+}
+
+/* Custom Confirmation Modal styles */
+#confirmationModal {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s;
+}
+
+#confirmationModal:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
 }
