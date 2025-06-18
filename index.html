@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PromptParto - ابزار تقسیم پرامپت</title>
+    <title>PromptParto - ابزار هوشمند تقسیم پرامپت</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts: Inter for general text, Vazirmatn for Persian -->
@@ -21,7 +21,7 @@
                 <i class="fas fa-magic text-blue-200 mr-2"></i>PromptParto
             </h1>
             <p class="text-lg opacity-90 text-center sm:text-right">
-                ابزاری برای تقسیم پرامپت‌های طولانی به بخش‌های قابل مدیریت
+                ابزاری هوشمند برای تقسیم پرامپت‌های طولانی به بخش‌های قابل مدیریت
             </p>
         </div>
     </header>
@@ -38,12 +38,12 @@
                         placeholder="پرامپت طولانی خود را اینجا وارد کنید یا فایل متنی را بکشید و رها کنید..."
                         aria-label="Prompt Input"
                     ></textarea>
-                    <!-- New: Drag and Drop Overlay -->
+                    <!-- Drag and Drop Overlay -->
                     <label for="fileInput" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-gray-400 dark:text-gray-500 text-lg opacity-0 transition-opacity duration-300 bg-transparent rounded-lg" id="dragDropOverlay">
                         <i class="fas fa-file-upload text-5xl mb-2"></i> 
                         <span class="text-xl">فایل متنی را اینجا رها کنید</span>
                     </label>
-                    <input type="file" id="fileInput" accept=".txt" class="hidden" aria-label="Upload text file">
+                    <input type="file" id="fileInput" accept=".txt,.md,.json" class="hidden" aria-label="Upload text file">
                     
                     <div class="flex justify-between text-sm mt-2">
                         <p id="charCount" class="text-gray-500 dark:text-gray-400 text-left">
@@ -76,7 +76,7 @@
                     >
                         <i class="fas fa-copy mr-2"></i> کپی همه
                     </button>
-                    <!-- New: Undo/Redo Buttons -->
+                    <!-- Undo/Redo Buttons -->
                     <div class="flex gap-3">
                         <button
                             id="undoButton"
@@ -115,6 +115,14 @@
                         aria-label="Clear Output Only"
                     >
                         <i class="fas fa-eraser mr-2"></i> پاک کردن خروجی
+                    </button>
+                    <!-- New: File Upload Button -->
+                    <button
+                        id="uploadFileButton"
+                        class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
+                        aria-label="Upload File"
+                    >
+                        <i class="fas fa-upload mr-2"></i> آپلود فایل
                     </button>
                 </div>
             </div>
@@ -251,7 +259,7 @@
                     </div>
                 </div>
 
-                <!-- New: History, Share and Prompt Templates Buttons -->
+                <!-- New: History, Share, Prompt Templates and Text Pre-processing Buttons -->
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
                    <div class="relative inline-block text-left z-10">
                         <button
@@ -287,7 +295,7 @@
                     >
                         <i class="fas fa-share-alt mr-2"></i> اشتراک‌گذاری
                     </button>
-                    <!-- New: Prompt Templates Dropdown -->
+                    <!-- Prompt Templates Dropdown -->
                     <div class="relative inline-block text-left z-10">
                         <button
                             id="templateDropdownToggle"
@@ -304,12 +312,54 @@
                                 <!-- Templates will be injected here -->
                                 <p class="text-center text-gray-500 dark:text-gray-400 p-2">الگویی وجود ندارد.</p>
                             </div>
+                            <div class="border-t border-gray-200 dark:border-gray-600 p-2 flex justify-center gap-2">
+                                <button
+                                    id="addTemplateButton"
+                                    class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-200 flex items-center justify-center text-sm"
+                                    aria-label="Add New Template"
+                                >
+                                    <i class="fas fa-plus mr-2"></i> افزودن الگو
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
+                
+                <!-- Text Pre-processing Buttons -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-semibold mb-4 text-center text-blue-700 dark:text-blue-400 sm:col-span-full">پیش‌پردازش متن</h3>
+                    <button
+                        id="cleanEmptyLinesButton"
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
+                        aria-label="Clean Empty Lines"
+                    >
+                        <i class="fas fa-eraser mr-2"></i> حذف خطوط خالی اضافی
+                    </button>
+                    <button
+                        id="trimWhitespaceButton"
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
+                        aria-label="Trim Extra Whitespace"
+                    >
+                        <i class="fas fa-text-width mr-2"></i> حذف فضاهای اضافی
+                    </button>
+                    <button
+                        id="lowercaseButton"
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
+                        aria-label="Convert to Lowercase"
+                    >
+                        <i class="fas fa-font mr-2"></i> تبدیل به حروف کوچک
+                    </button>
+                    <button
+                        id="uppercaseButton"
+                        class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
+                        aria-label="Convert to Uppercase"
+                    >
+                        <i class="fas fa-text-height mr-2"></i> تبدیل به حروف بزرگ
+                    </button>
+                </div>
 
                 <!-- New: Global Data Management Buttons -->
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                     <button
                         id="exportAllDataButton"
                         class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
@@ -325,6 +375,17 @@
                         <i class="fas fa-file-import mr-2"></i> وارد کردن تمام داده‌ها
                     </button>
                     <input type="file" id="importFileInput" accept=".json" class="hidden">
+                </div>
+
+                <!-- Compact View Toggle -->
+                <div class="flex justify-center mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                        id="toggleCompactViewButton"
+                        class="bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded-full shadow-md transition duration-200 flex items-center justify-center text-sm"
+                        aria-label="Toggle Compact View"
+                    >
+                        <i class="fas fa-compress-alt ml-2"></i> <span id="compactViewText">حالت فشرده</span>
+                    </button>
                 </div>
 
             </div>
@@ -391,12 +452,18 @@
                     <button id="aiToneInformalButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">لحن غیررسمی</button>
                     <button id="aiTranslateEnButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">ترجمه به انگلیسی</button>
                     <button id="aiTranslateFaButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">ترجمه به فارسی</button>
+                    <button id="aiConvertMarkdownButton" class="ai-action-btn bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md text-sm transition-colors duration-200">
+                        <i class="fab fa-markdown ml-2"></i> تبدیل به مارک‌داون
+                    </button>
+                    <button id="aiConvertJsonButton" class="ai-action-btn bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md text-sm transition-colors duration-200">
+                        <i class="fas fa-file-code ml-2"></i> تبدیل به JSON
+                    </button>
                     <button id="aiSendToAIButton" class="ai-action-btn bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm transition-colors duration-200">
                         <i class="fas fa-paper-plane ml-2"></i> ارسال به هوش مصنوعی
                     </button>
                 </div>
                 
-                <!-- New: AI Advanced Settings -->
+                <!-- AI Advanced Settings -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <div class="flex items-center gap-2">
                         <label for="aiTemperature" class="text-gray-700 dark:text-gray-300">دما (خلاقیت):</label>
@@ -493,7 +560,7 @@
         </div>
     </div>
 
-    <!-- New: Custom Confirmation Modal Structure -->
+    <!-- Custom Confirmation Modal Structure -->
     <div id="confirmationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-sm transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
             <div class="flex justify-between items-center pb-3 border-b dark:border-gray-700">
@@ -512,7 +579,7 @@
         </div>
     </div>
 
-    <!-- New: Generic Input Modal Structure -->
+    <!-- Generic Input Modal Structure -->
     <div id="inputModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-sm transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
             <div class="flex justify-between items-center pb-3 border-b dark:border-gray-700">
@@ -551,6 +618,8 @@
         </div>
     </footer>
 
+    <!-- Markdown Parser Library (for AI Markdown output) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
     <!-- JavaScript File -->
     <script src="script.js"></script>
 </body>
