@@ -547,3 +547,12 @@ header {
     opacity: 1;
     visibility: visible;
 }
+
+/* Compact view styles */
+body.compact-view {
+    font-size: 0.9rem;
+}
+body.compact-view .prompt-part-box {
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}

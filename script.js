@@ -51,6 +51,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const templateDropdownToggle = document.getElementById('templateDropdownToggle'); // New
     const templateDropdownMenu = document.getElementById('templateDropdownMenu'); // New
     const templateList = document.getElementById('templateList'); // New
+    const addTemplateButton = document.getElementById('addTemplateButton');
+
+    const aiConvertMarkdownButton = document.getElementById('aiConvertMarkdownButton');
+    const aiConvertJsonButton = document.getElementById('aiConvertJsonButton');
+    const cleanEmptyLinesButton = document.getElementById('cleanEmptyLinesButton');
+    const trimWhitespaceButton = document.getElementById('trimWhitespaceButton');
+    const lowercaseButton = document.getElementById('lowercaseButton');
+    const uppercaseButton = document.getElementById('uppercaseButton');
+    const toggleCompactViewButton = document.getElementById('toggleCompactViewButton');
+    const compactViewText = document.getElementById('compactViewText');
+
 
     // AI Modal elements
     const aiResponseModal = document.getElementById('aiResponseModal');
@@ -694,6 +705,118 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         showMessage('بخش‌ها با موفقیت در یک فایل JSON ذخیره شدند.', 'success');
+    }
+
+    // --- Text Pre-processing Helpers ---
+    function cleanEmptyLines() {
+        promptInput.value = promptInput.value.replace(/^\s*$(?:\r?\n)/gm, "");
+        updateCharCount();
+        updateWordCount();
+        updateTokenCount();
+        triggerAutoSplit();
+        saveCurrentStateToHistory();
+        showMessage('خطوط خالی حذف شد.', 'success', 1500);
+    }
+
+    function trimExtraWhitespace() {
+        const trimmed = promptInput.value.split(/\n/).map(line => line.trim()).join('\n');
+        promptInput.value = trimmed;
+        updateCharCount();
+        updateWordCount();
+        updateTokenCount();
+        triggerAutoSplit();
+        saveCurrentStateToHistory();
+        showMessage('فاصله‌های اضافی حذف شدند.', 'success', 1500);
+    }
+
+    function convertToLowercase() {
+        promptInput.value = promptInput.value.toLowerCase();
+        updateCharCount();
+        updateWordCount();
+        updateTokenCount();
+        triggerAutoSplit();
+        saveCurrentStateToHistory();
+        showMessage('تمام متن به حروف کوچک تبدیل شد.', 'success', 1500);
+    }
+
+    function convertToUppercase() {
+        promptInput.value = promptInput.value.toUpperCase();
+        updateCharCount();
+        updateWordCount();
+        updateTokenCount();
+        triggerAutoSplit();
+        saveCurrentStateToHistory();
+        showMessage('تمام متن به حروف بزرگ تبدیل شد.', 'success', 1500);
+    }
+
+    function exportAiResponseMarkdown() {
+        const text = aiResponseTextarea.value.trim();
+        if (!text) {
+            showMessage('پاسخی برای تبدیل وجود ندارد.', 'error');
+            return;
+        }
+        const blob = new Blob([text], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ai_response.md';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showMessage('پاسخ در قالب مارک‌داون دانلود شد.', 'success');
+    }
+
+    function exportAiResponseJson() {
+        const text = aiResponseTextarea.value.trim();
+        if (!text) {
+            showMessage('پاسخی برای تبدیل وجود ندارد.', 'error');
+            return;
+        }
+        const blob = new Blob([JSON.stringify({ response: text }, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'ai_response.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showMessage('پاسخ در قالب JSON دانلود شد.', 'success');
+    }
+
+    function toggleCompactView() {
+        document.body.classList.toggle('compact-view');
+        const isCompact = document.body.classList.contains('compact-view');
+        if (compactViewText) {
+            compactViewText.textContent = isCompact ? 'نمای عادی' : 'حالت فشرده';
+        }
+    }
+
+    function addPromptTemplate() {
+        const promptContent = promptInput.value.trim();
+        if (!promptContent) {
+            showMessage('پرامپتی برای ذخیره وجود ندارد.', 'error');
+            return;
+        }
+        const defaultName = `الگو ${new Date().toLocaleString()}`;
+        showInputModal(
+            'افزودن الگو',
+            'لطفاً نامی برای الگوی پرامپت وارد کنید:',
+            'نام الگو',
+            defaultName,
+            (name) => {
+                if (!name || name.trim() === '') {
+                    showMessage('نام الگو نمی‌تواند خالی باشد.', 'error');
+                    return;
+                }
+                promptTemplates.push({ name: name.trim(), content: promptContent });
+                saveTemplatesToLocalStorage(promptTemplates);
+                renderPromptTemplates();
+                showMessage(`الگوی "${name.trim()}" ذخیره شد.`, 'success');
+            },
+            'ذخیره'
+        );
     }
 
     // --- Splitting Logic ---
@@ -1919,6 +2042,14 @@ document.addEventListener('DOMContentLoaded', () => {
         templateDropdownToggle.setAttribute('aria-expanded', !isExpanded);
     });
 
+    addTemplateButton.addEventListener('click', addPromptTemplate);
+    aiConvertMarkdownButton.addEventListener('click', exportAiResponseMarkdown);
+    aiConvertJsonButton.addEventListener('click', exportAiResponseJson);
+    cleanEmptyLinesButton.addEventListener('click', cleanEmptyLines);
+    trimWhitespaceButton.addEventListener('click', trimExtraWhitespace);
+    lowercaseButton.addEventListener('click', convertToLowercase);
+    uppercaseButton.addEventListener('click', convertToUppercase);
+    toggleCompactViewButton.addEventListener('click', toggleCompactView);
 
     // Close dropdowns if clicked outside
     document.addEventListener('click', (event) => {
@@ -2189,12 +2320,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Prompt Templates Logic ---
-    const promptTemplates = [
+    const DEFAULT_TEMPLATES = [
         { name: "ایمیل رسمی", content: "موضوع: [موضوع]\n\nبا سلام و احترام،\n\n[متن ایمیل رسمی]\n\nبا تشکر،\n[نام شما]" },
         { name: "داستان کوتاه", content: "عنوان: [عنوان داستان]\n\n[شروع داستان]\n\n[میانه داستان]\n\n[پایان داستان]" },
         { name: "ایده پردازی", content: "موضوع: [موضوع ایده پردازی]\n\nایده‌های اولیه:\n- [ایده 1]\n- [ایده 2]\n- [ایده 3]\n\nنکات کلیدی:\n- [نکته 1]\n- [نکته 2]" },
         { name: "خلاصه کتاب", content: "عنوان کتاب: [نام کتاب]\nنویسنده: [نام نویسنده]\n\nخلاصه:\n[خلاصه کلی کتاب]\n\nنکات کلیدی:\n- [نکته کلیدی 1]\n- [نکته کلیدی 2]\n\nبخش‌های مورد علاقه:\n[بخش مورد علاقه 1]\n[بخش مورد علاقه 2]" }
     ];
+
+    let promptTemplates = [];
+
+    function getSavedTemplates() {
+        try {
+            const stored = localStorage.getItem("promptPartoTemplates");
+            return stored ? JSON.parse(stored) : [];
+        } catch (e) {
+            console.error("Error parsing templates from localStorage:", e);
+            return [];
+        }
+    }
+
+    function saveTemplatesToLocalStorage(templates) {
+        try {
+            localStorage.setItem("promptPartoTemplates", JSON.stringify(templates));
+        } catch (e) {
+            console.error("Error saving templates to localStorage:", e);
+            showMessage("ذخیره الگو با مشکل مواجه شد. حافظه مرورگر پر است؟", "error");
+        }
+    }
+
+    function loadPromptTemplates() {
+        const stored = getSavedTemplates();
+        if (stored.length > 0) {
+            promptTemplates = stored;
+        } else {
+            promptTemplates = [...DEFAULT_TEMPLATES];
+        }
+    }
 
     /**
      * Renders the list of prompt templates in the dropdown menu.
@@ -2246,7 +2407,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const allData = {
             settings: JSON.parse(localStorage.getItem('promptPartoSettings') || '{}'),
             savedPrompts: JSON.parse(localStorage.getItem('promptPartoSavedPrompts') || '[]'),
-            promptHistory: JSON.parse(localStorage.getItem('promptPartoHistory') || '[]')
+            promptHistory: JSON.parse(localStorage.getItem('promptPartoHistory') || '[]'),
+            templates: JSON.parse(localStorage.getItem('promptPartoTemplates') || '[]')
         };
         const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json;charset=utf-8' });
         const url = URL.createObjectURL(blob);
@@ -2289,12 +2451,17 @@ document.addEventListener('DOMContentLoaded', () => {
                                 if (importedData.promptHistory) {
                                     localStorage.setItem('promptPartoHistory', JSON.stringify(importedData.promptHistory));
                                 }
+                                if (importedData.templates) {
+                                    localStorage.setItem('promptPartoTemplates', JSON.stringify(importedData.templates));
+                                }
                                 // Reload everything to reflect imported data
                                 loadSettings();
                                 loadAutoPrompt();
                                 loadPromptHistoryFromLocalStorage();
+                                loadPromptTemplates();
                                 renderSavedPromptsList();
                                 renderPromptHistoryList();
+                                renderPromptTemplates();
                                 triggerAutoSplit();
                                 // Clear undo/redo history upon full data import
                                 promptHistoryStack = [];
@@ -2402,7 +2569,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderSavedPromptsList();
     renderPromptHistoryList(); // Render history on load
-    renderPromptTemplates(); // New: Render prompt templates on load
+    loadPromptTemplates();
+    renderPromptTemplates();
 
     // Disable buttons initially (will be enabled by renderOutput if parts exist)
     copyAllButton.disabled = true;
