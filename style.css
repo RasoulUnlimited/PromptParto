@@ -175,10 +175,13 @@ body.dark .prompt-part-box pre {
 .ai-button,
 #splitButton,
 #copyAllButton,
+#undoButton, /* New */
+#redoButton, /* New */
 #loadExampleButton,
 #clearAllButton,
 #clearOutputOnlyButton,
 #exportTextButton,
+#exportMarkdownButton, /* New */
 #exportJsonButton,
 #savePromptButton,
 #loadPromptDropdownToggle,
@@ -187,7 +190,8 @@ body.dark .prompt-part-box pre {
 #promptHistoryDropdownToggle,
 #shareButton,
 #exportAllDataButton, /* New button */
-#importAllDataButton /* New button */
+#importAllDataButton, /* New button */
+#templateDropdownToggle /* New button */
  {
     font-weight: 500; /* font-medium */
     padding: 0.75rem 1.5rem; /* py-3 px-6 for main buttons, adjust if needed */
@@ -205,10 +209,13 @@ body.dark .prompt-part-box pre {
 .ai-button:hover,
 #splitButton:hover,
 #copyAllButton:hover,
+#undoButton:hover, /* New */
+#redoButton:hover, /* New */
 #loadExampleButton:hover,
 #clearAllButton:hover,
 #clearOutputOnlyButton:hover,
 #exportTextButton:hover,
+#exportMarkdownButton:hover, /* New */
 #exportJsonButton:hover,
 #savePromptButton:hover,
 #loadPromptDropdownToggle:hover,
@@ -217,7 +224,8 @@ body.dark .prompt-part-box pre {
 #promptHistoryDropdownToggle:hover,
 #shareButton:hover,
 #exportAllDataButton:hover, /* New button */
-#importAllDataButton:hover /* New button */
+#importAllDataButton:hover, /* New button */
+#templateDropdownToggle:hover /* New button */
  {
     transform: translateY(-2px); /* Consistent lift on hover */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Deeper shadow on hover */
@@ -228,10 +236,13 @@ body.dark .prompt-part-box pre {
 .ai-button:active,
 #splitButton:active,
 #copyAllButton:active,
+#undoButton:active, /* New */
+#redoButton:active, /* New */
 #loadExampleButton:active,
 #clearAllButton:active,
 #clearOutputOnlyButton:active,
 #exportTextButton:active,
+#exportMarkdownButton:active, /* New */
 #exportJsonButton:active,
 #savePromptButton:active,
 #loadPromptDropdownToggle:active,
@@ -240,7 +251,8 @@ body.dark .prompt-part-box pre {
 #promptHistoryDropdownToggle:active,
 #shareButton:active,
 #exportAllDataButton:active, /* New button */
-#importAllDataButton:active /* New button */
+#importAllDataButton:active, /* New button */
+#templateDropdownToggle:active /* New button */
  {
     transform: translateY(1px); /* Press down effect */
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Flatter shadow when pressed */
@@ -249,11 +261,13 @@ body.dark .prompt-part-box pre {
 /* Specific colors for buttons */
 #splitButton { background-color: #2563eb; color: #fff; } /* blue-700 */
 #copyAllButton { background-color: #16a34a; color: #fff; } /* green-700 */
+#undoButton, #redoButton { background-color: #6b7280; color: #fff; } /* gray-500 */
 #loadExampleButton { background-color: #6b7280; color: #fff; } /* gray-500 */
 #clearAllButton { background-color: #dc2626; color: #fff; } /* red-700 */
 #clearOutputOnlyButton { background-color: #f97316; color: #fff; } /* orange-600 */
 #exportTextButton { background-color: #7c3aed; color: #fff; } /* purple-600 */
-#exportJsonButton { background-color: #0d9488; color: #fff; } /* teal-600 */
+#exportMarkdownButton { background-color: #0d9488; color: #fff; } /* teal-600 */
+#exportJsonButton { background-color: #0d9488; color: #fff; } /* teal-600 (use same as markdown or slightly different) */
 #savePromptButton { background-color: #4f46e5; color: #fff; } /* indigo-600 */
 #loadPromptDropdownToggle { background-color: #fff; color: #374151; border: 1px solid #d1d5db; } /* white with gray text */
 /* Specific style for part delete button */
@@ -275,15 +289,18 @@ body.dark .prompt-part-box pre {
 #promptHistoryDropdownToggle { background-color: #fff; color: #374151; border: 1px solid #d1d5db; } /* white with gray text */
 #shareButton { background-color: #a855f7; color: #fff; } /* purple-500 */
 #exportAllDataButton, #importAllDataButton { background-color: #4a5568; color: #fff; } /* gray-600 */
+#templateDropdownToggle { background-color: #fff; color: #374151; border: 1px solid #d1d5db; } /* white with gray text */
 
 
 /* Dark Mode specific button colors */
 body.dark #splitButton { background-color: #3b82f6; } /* blue-500 */
 body.dark #copyAllButton { background-color: #22c55e; } /* green-500 */
+body.dark #undoButton, body.dark #redoButton { background-color: #4b5563; } /* gray-600 */
 body.dark #loadExampleButton { background-color: #4b5563; } /* gray-600 */
 body.dark #clearAllButton { background-color: #ef4444; } /* red-500 */
 body.dark #clearOutputOnlyButton { background-color: #f97316; } /* orange-500 */
 body.dark #exportTextButton { background-color: #8b5cf6; } /* purple-500 */
+body.dark #exportMarkdownButton { background-color: #14b8a6; } /* teal-500 */
 body.dark #exportJsonButton { background-color: #14b8a6; } /* teal-500 */
 body.dark #savePromptButton { background-color: #6366f1; } /* indigo-500 */
 body.dark #loadPromptDropdownToggle { background-color: #2d3748; color: #e2e8f0; border-color: #4a5568; } /* gray-800 */
@@ -300,6 +317,8 @@ body.dark #promptHistoryDropdownToggle { background-color: #2d3748; color: #e2e8
 body.dark #promptHistoryDropdownToggle:hover { background-color: #4a5568; }
 body.dark #shareButton { background-color: #c084fc; } /* purple-400 */
 body.dark #exportAllDataButton, body.dark #importAllDataButton { background-color: #6b7280; } /* gray-500 */
+body.dark #templateDropdownToggle { background-color: #2d3748; color: #e2e8f0; border-color: #4a5568; } /* gray-800 */
+body.dark #templateDropdownToggle:hover { background-color: #4a5568; }
 
 
 /* Styles for message box types (success/error/info) */
@@ -386,7 +405,7 @@ body.dark #messageBox.bg-blue-100 {
 }
 
 body.dark #messageBox.bg-green-100 {
-    background-color: #10b981; /* green-600 */
+    background-color: #10b981; /* green-600 dark */
     border-color: #059669;
     color: #d1fae5;
 }
@@ -513,6 +532,18 @@ header {
 }
 
 #confirmationModal:not(.hidden) {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Generic Input Modal Styles */
+#inputModal {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s;
+}
+
+#inputModal:not(.hidden) {
     opacity: 1;
     visibility: visible;
 }
