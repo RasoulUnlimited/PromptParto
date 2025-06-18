@@ -1,3 +1,7 @@
+import { sendToAI } from "../utils/gemini.js";
+import { addDragDropListenersToParts, rebuildPromptFromReorderedParts, setupFileDragDrop } from "../utils/dragdrop.js";
+import { saveLongTermPromptHistory, loadPromptHistoryFromLocalStorage, savePromptHistoryToLocalStorage, renderPromptHistoryList, deleteHistoryItem, clearPromptHistory, formatTimeAgo } from "../utils/history.js";
+
 document.addEventListener('DOMContentLoaded', () => {
     // Get DOM elements
     const promptInput = document.getElementById('promptInput');
@@ -118,6 +122,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputModalCancelButton = document.getElementById('inputModalCancelButton');
     const inputModalConfirmButton = document.getElementById('inputModalConfirmButton');
     let inputModalCallback = null;
+    // Expose elements for modules
+    Object.assign(window, {promptInput, outputContainer, historyList, clearHistoryButton, promptHistoryDropdownMenu, apiKeyInput, aiResponseTextarea, aiLoadingSpinner, aiPromptInput, aiTemperatureInput, aiTopPInput, aiResponseCharLimitInput, aiResponseModal, aiResponseCharLimitBar, copyAiResponseButton, insertAiResponseButton, aiSendToAIButton, dragDropZone, dragDropOverlay, fileInput, messageBox, saveLongTermPromptHistory, loadPromptHistoryFromLocalStorage, savePromptHistoryToLocalStorage, renderPromptHistoryList, deleteHistoryItem, clearPromptHistory, sendToAI});
 
     // Default constants for splitting logic
     let MAX_CHARS_PER_PART = parseInt(maxCharsPerPartInput.value, 10) || 3800;
@@ -1231,83 +1237,6 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {string} textToRefine - The text content to be refined by AI.
      * @param {string} commandPrompt - The specific instruction for the AI (e.g., "Summarize", "Rephrase).
      */
-    async function sendToAI(textToRefine, commandPrompt) {
-        const apiKey = (apiKeyInput && apiKeyInput.value.trim()) || localStorage.getItem('promptPartoApiKey') || '';
-        if (!apiKey) {
-            showMessage('کلید Gemini API وارد نشده است.', 'error');
-            return;
-        }
-        localStorage.setItem('promptPartoApiKey', apiKey);
-        aiResponseTextarea.value = '';
-        updateAiResponseCounts(); // Clear counts
-        aiLoadingSpinner.classList.remove('hidden');
-        aiResponseTextarea.classList.add('hidden');
-        copyAiResponseButton.disabled = true;
-        insertAiResponseButton.disabled = true;
-        aiSendToAIButton.disabled = true;
-        aiSendToAIButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> در حال ارسال...`;
-
-        const finalCommand = aiPromptInput.value.trim(); // Always use aiPromptInput value
-        const temperature = parseFloat(aiTemperatureInput.value);
-        const topP = parseFloat(aiTopPInput.value);
-        const aiResponseCharLimit = parseInt(aiResponseCharLimitInput.value, 10);
-
-        try {
-            const prompt = `${finalCommand}:\n\n"${textToRefine}"\n\nلطفا فقط متن اصلاح شده یا خلاصه شده را برگردانید و از هرگونه مقدمه یا خاتمه اضافه خودداری کنید.`;
-
-            let chatHistory = [];
-            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-            const payload = {
-                contents: chatHistory,
-                generationConfig: {
-                    temperature: isNaN(temperature) ? 0.7 : Math.max(0, Math.min(1, temperature)),
-                    topP: isNaN(topP) ? 0.9 : Math.max(0, Math.min(1, topP)),
-                    // maxOutputTokens is not directly configurable for gemini-2.0-flash via generateContent payload.
-                    // Client-side truncation will be applied after response.
-                }
-            };
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-            
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            const result = await response.json();
-            
-            if (result.candidates && result.candidates.length > 0 &&
-                result.candidates[0].content && result.candidates[0].content.parts &&
-                result.candidates[0].content.parts.length > 0) {
-                let aiResponse = result.candidates[0].content.parts[0].text;
-                
-                // Apply client-side truncation if a limit is set
-                if (aiResponseCharLimit > 0 && aiResponse.length > aiResponseCharLimit) {
-                    aiResponse = aiResponse.substring(0, aiResponseCharLimit);
-                    showMessage(`پاسخ هوش مصنوعی به دلیل محدودیت ${aiResponseCharLimit} کاراکتری کوتاه شد.`, 'info');
-                }
-
-                aiResponseTextarea.value = aiResponse.trim();
-                showMessage(`پاسخ هوش مصنوعی دریافت شد.`, 'success');
-            } else {
-                aiResponseTextarea.value = 'پاسخی از هوش مصنوعی دریافت نشد. لطفاً دوباره تلاش کنید.';
-                showMessage('خطا در دریافت پاسخ هوش مصنوعی.', 'error');
-            }
-
-        } catch (error) {
-            console.error('Error calling Gemini API:', error);
-            aiResponseTextarea.value = 'خطا در ارتباط با هوش مصنوعی. لطفاً اتصال اینترنت خود را بررسی کنید یا بعداً تلاش کنید.';
-            showMessage('خطا در ارتباط با هوش مصنوعی.', 'error');
-        } finally {
-            aiLoadingSpinner.classList.add('hidden');
-            aiResponseTextarea.classList.remove('hidden');
-            copyAiResponseButton.disabled = false;
-            insertAiResponseButton.disabled = false;
-            aiSendToAIButton.disabled = false;
-            aiSendToAIButton.innerHTML = `<i class="fas fa-paper-plane ml-2"></i> ارسال به هوش مصنوعی`;
-            updateAiResponseCounts(); // Update counts after AI response is received
-        }
-    }
 
     // Event listeners for AI modal buttons
     closeAiModalButton.addEventListener('click', () => {
@@ -1459,116 +1388,6 @@ document.addEventListener('DOMContentLoaded', () => {
     aiResponseTextarea.addEventListener('input', updateAiResponseCounts);
 
 
-    // --- Drag and Drop Reordering Logic ---
-    let draggedItem = null;
-    let placeholder = null; // New: Placeholder element for drag-and-drop
-
-    function addDragDropListenersToParts() {
-        const parts = outputContainer.querySelectorAll('.prompt-part-box');
-        parts.forEach(part => {
-            part.addEventListener('dragstart', (e) => {
-                draggedItem = part;
-                e.dataTransfer.effectAllowed = 'move';
-                // Create and insert placeholder when drag starts
-                placeholder = document.createElement('div');
-                placeholder.classList.add('drag-placeholder');
-                part.parentNode.insertBefore(placeholder, part.nextSibling);
-
-                setTimeout(() => {
-                    part.classList.add('dragging');
-                }, 0);
-            });
-
-            part.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                if (e.target.closest('.prompt-part-box') && e.target.closest('.prompt-part-box') !== draggedItem) {
-                    const targetItem = e.target.closest('.prompt-part-box');
-                    const bounding = targetItem.getBoundingClientRect();
-                    const offset = bounding.y + (bounding.height / 2);
-
-                    if (e.clientY - offset > 0) {
-                        // Dragging below target, insert after
-                        if (targetItem.nextSibling !== placeholder) { // Prevent moving if placeholder is already correctly positioned
-                            targetItem.parentNode.insertBefore(placeholder, targetItem.nextSibling);
-                        }
-                    } else {
-                        // Dragging above target, insert before
-                        if (targetItem.previousSibling !== placeholder) { // Prevent moving if placeholder is already correctly positioned
-                             targetItem.parentNode.insertBefore(placeholder, targetItem);
-                        }
-                    }
-                }
-            });
-
-            part.addEventListener('dragleave', (e) => {
-                // No specific action needed for `.prompt-part-box` itself
-            });
-
-            part.addEventListener('dragend', (e) => {
-                if (draggedItem) {
-                    draggedItem.classList.remove('dragging');
-                    if (placeholder && placeholder.parentNode) {
-                        placeholder.parentNode.removeChild(placeholder); // Remove placeholder
-                    }
-                    // Insert the dragged item at the placeholder's final position
-                    const targetParent = outputContainer;
-                    if (placeholder && placeholder.parentNode === targetParent) {
-                        targetParent.insertBefore(draggedItem, placeholder);
-                    } else {
-                         // Fallback if placeholder was unexpectedly removed, just re-append to parent
-                        outputContainer.appendChild(draggedItem);
-                    }
-                }
-                draggedItem = null;
-                placeholder = null; // Reset placeholder
-                rebuildPromptFromReorderedParts();
-                // After reordering, if the AI modal was open for a part, reset its original index
-                if (currentPartOriginalContent && currentPartOriginalIndex !== -1) {
-                    const reorderedElements = Array.from(outputContainer.querySelectorAll('.prompt-part-box'));
-                    const newIndex = reorderedElements.findIndex(el => el.dataset.originalContent === currentPartOriginalContent);
-                    if (newIndex !== -1) {
-                        currentPartOriginalIndex = newIndex;
-                    } else {
-                        // If the original part is somehow not found after reordering, reset.
-                        currentPartOriginalContent = null;
-                        currentPartOriginalIndex = -1;
-                        if (currentlyHighlightedPartElement) {
-                            currentlyHighlightedPartElement.classList.remove('active-ai-edit');
-                            currentlyHighlightedPartElement = null;
-                        }
-                    }
-                }
-            });
-        });
-
-        // Add dragover listener to the output container itself to handle drops at the end or empty space
-        outputContainer.addEventListener('dragover', (e) => {
-            e.preventDefault(); // Allows drop
-            if (draggedItem && !e.target.closest('.prompt-part-box') && placeholder && !placeholder.parentNode) {
-                // If dragging over empty space in the container, append placeholder to end
-                outputContainer.appendChild(placeholder);
-            }
-        });
-    }
-
-    /**
-     * Rebuilds the main prompt input based on the reordered parts in the output container.
-     * پرامپت اصلی را بر اساس ترتیب جدید بخش‌ها در کانتینر خروجی بازسازی می‌کند.
-     */
-    function rebuildPromptFromReorderedParts() {
-        const reorderedPartElements = outputContainer.querySelectorAll('.prompt-part-box');
-        const originalContents = Array.from(reorderedPartElements).map(el => el.dataset.originalContent);
-
-        const rebuiltPrompt = originalContents.join('\n\n');
-
-        promptInput.value = rebuiltPrompt;
-        updateCharCount();
-        updateWordCount();
-        updateTokenCount(); // Update token count after reorder
-        showMessage('ترتیب بخش‌ها تغییر کرد. می‌توانید پرامپپت اصلی را کپی کنید یا دوباره تقسیم کنید.', 'info');
-        triggerAutoSplit();
-        saveCurrentStateToHistory(); // Save to history after reordering
-    }
 
 
     // --- Prompt History Logic (distinct from undo/redo stack) ---
@@ -1577,157 +1396,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // saveCurrentPromptState() is for undo/redo.
     // We need a separate function for long-term history saved to localStorage.
-    /**
-     * Saves the current prompt input value to the long-term history.
-     * مقدار فعلی ورودی پرامپت را در تاریخچه بلندمدت ذخیره می‌کند.
-     */
-    function saveLongTermPromptHistory() {
-        const currentContent = promptInput.value.trim();
-        // Prevent saving if current content is identical to the latest history entry OR if content is empty and history already has an empty entry
-        if (promptHistory.length > 0 && currentContent === promptHistory[0].content) {
-            return;
-        }
-        promptHistory.unshift({ content: currentContent, timestamp: new Date() });
-        if (promptHistory.length > PROMPT_HISTORY_LIMIT) {
-            promptHistory.pop(); // Remove oldest entry
-        }
-        savePromptHistoryToLocalStorage(); // Persist history
-        renderPromptHistoryList();
-    }
-
-    /**
-     * Loads prompt history from local storage.
-     * تاریخچه پرامپت را از حافظه محلی بارگذاری می‌کند.
-     */
-    function loadPromptHistoryFromLocalStorage() {
-        try {
-            const storedHistory = localStorage.getItem('promptPartoHistory');
-            if (storedHistory) {
-                promptHistory = JSON.parse(storedHistory).map(entry => ({
-                    content: entry.content,
-                    timestamp: new Date(entry.timestamp) // Convert timestamp string back to Date object
-                }));
-            }
-        } catch (e) {
-            console.error('Error loading prompt history from localStorage:', e);
-            promptHistory = []; // Clear history on error
-        }
-    }
-
-    /**
-     * Saves prompt history to local storage.
-     * تاریخچه پرامپت را در حافظه محلی ذخیره می‌کند.
-     */
-    function savePromptHistoryToLocalStorage() {
-        try {
-            localStorage.setItem('promptPartoHistory', JSON.stringify(promptHistory));
-        } catch (e) {
-            console.error('Error saving prompt history to localStorage:', e);
-            showMessage('ذخیره تاریخچه با مشکل مواجه شد. حافظه مرورگر پر است؟', 'error');
-        }
-    }
-
-
-    /**
-     * Renders the prompt history list in the dropdown.
-     * لیست تاریخچه پرامپت را در منوی کشویی رندر می‌کند.
-     */
-    function renderPromptHistoryList() {
-        historyList.innerHTML = '';
-        if (promptHistory.length === 0) {
-            historyList.innerHTML = '<p class="text-center text-gray-500 dark:text-gray-400 p-2">هیچ تاریخچه‌ای وجود ندارد.</p>';
-            clearHistoryButton.classList.add('hidden'); // Hide clear button if no history
-            return;
-        } else {
-            clearHistoryButton.classList.remove('hidden'); // Show clear button if history exists
-        }
-
-        promptHistory.forEach((entry, index) => {
-            const timeAgo = formatTimeAgo(entry.timestamp);
-            const div = document.createElement('div');
-            div.classList.add('flex', 'justify-between', 'items-center', 'p-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'transition-colors', 'duration-200');
-
-            const historyItem = document.createElement('a');
-            historyItem.href = '#';
-            historyItem.classList.add('flex-grow', 'block', 'px-2', 'py-1', 'text-sm', 'text-gray-700', 'dark:text-gray-200', 'truncate');
-            historyItem.textContent = `${entry.content.substring(0, 40)}... (${timeAgo})`;
-            historyItem.title = `بازگشت به: ${entry.content}\nذخیره شده: ${entry.timestamp.toLocaleString()}`;
-            historyItem.addEventListener('click', (e) => {
-                e.preventDefault();
-                promptInput.value = entry.content;
-                updateCharCount();
-                updateWordCount();
-                updateTokenCount();
-                showMessage(`پرامپت به نسخه قبلی بازگردانده شد (${timeAgo}).`, 'info');
-                promptHistoryDropdownMenu.classList.add('hidden');
-                triggerAutoSplit();
-                saveCurrentStateToHistory(); // Save the loaded state to undo/redo history
-                // When loading from history, we *don't* want to immediately add to history again
-                // The next user input will add a new state.
-            });
-            div.appendChild(historyItem);
-
-            const deleteButton = document.createElement('button');
-            deleteButton.classList.add('delete-prompt-btn', 'bg-red-500', 'hover:bg-red-600', 'text-white', 'p-1', 'rounded', 'text-xs', 'ml-2');
-            deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
-            deleteButton.title = `حذف این مورد از تاریخچه`;
-            deleteButton.addEventListener('click', (e) => {
-                e.stopPropagation();
-                showConfirmationModal('آیا مطمئنید می‌خواهید این مورد را از تاریخچه حذف کنید؟', () => {
-                    deleteHistoryItem(index);
-                    showMessage('آیتم تاریخچه حذف شد.', 'success');
-                });
-            });
-            div.appendChild(deleteButton);
-            historyList.appendChild(div);
-        });
-    }
-
-    /**
-     * Deletes a specific item from the prompt history by index.
-     * یک آیتم خاص را از تاریخچه پرامپت بر اساس ایندکس حذف می‌کند.
-     * @param {number} indexToDelete - The index of the item to delete.
-     */
-    function deleteHistoryItem(indexToDelete) {
-        promptHistory.splice(indexToDelete, 1);
-        savePromptHistoryToLocalStorage();
-        renderPromptHistoryList();
-    }
-
-    /**
-     * Clears the entire prompt history.
-     * کل تاریخچه پرامپت را پاک می‌کند.
-     */
-    function clearPromptHistory() {
-        showConfirmationModal('آیا مطمئنید می‌خواهید کل تاریخچه پرامپت را پاک کنید؟ این عمل برگشت‌ناپذیر است.', () => {
-            promptHistory = [];
-            savePromptHistoryToLocalStorage();
-            renderPromptHistoryList();
-            showMessage('تاریخچه پرامپت پاک شد.', 'success');
-        });
-    }
-
-
-    /**
-     * Formats a date object to "X minutes/hours/days ago".
-     * یک شی تاریخ را به فرمت "X دقیقه/ساعت/روز پیش" قالب‌بندی می‌کند.
-     * @param {Date} date - The date object.
-     * @returns {string} Formatted string.
-     */
-    function formatTimeAgo(date) {
-        const seconds = Math.floor((new Date() - date) / 1000);
-        let interval = seconds / 31536000;
-        if (interval > 1) return Math.floor(interval) + " سال پیش";
-        interval = seconds / 2592000;
-        if (interval > 1) return Math.floor(interval) + " ماه پیش";
-        interval = seconds / 86400;
-        if (interval > 1) return Math.floor(interval) + " روز پیش";
-        interval = seconds / 3600;
-        if (interval > 1) return Math.floor(interval) + " ساعت پیش";
-        interval = seconds / 60;
-        if (interval > 1) return Math.floor(interval) + " دقیقه پیش";
-        return Math.floor(seconds) + " ثانیه پیش";
-    }
 
     // --- Auto-Save Prompt Logic ---
     let autoSaveTimer;
@@ -1843,88 +1511,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
+// Expose functions for modules
+    Object.assign(window, {updateCharCount, updateWordCount, updateTokenCount, showMessage, showConfirmationModal, triggerAutoSplit, saveCurrentStateToHistory, saveAutoPrompt});
+
+    setupFileDragDrop();
 
 
-    // --- Drag and Drop File Handling ---
-    dragDropZone.addEventListener('dragover', (e) => {
-        e.preventDefault(); // Prevent default to allow drop
-        dragDropZone.classList.add('drag-over');
-    });
 
-    dragDropZone.addEventListener('dragleave', (e) => {
-        // Only remove drag-over if leaving the main drop zone, not just child elements
-        if (!dragDropZone.contains(e.relatedTarget)) {
-            dragDropZone.classList.remove('drag-over');
-        }
-    });
-
-    dragDropZone.addEventListener('drop', (e) => {
-        e.preventDefault(); // Prevent default file open
-        dragDropZone.classList.remove('drag-over');
-
-        const files = e.dataTransfer.files;
-        if (files.length > 0) {
-            const file = files[0];
-            if (file.type === 'text/plain') {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    promptInput.value = event.target.result;
-                    updateCharCount();
-                    updateWordCount();
-                    updateTokenCount();
-                    triggerAutoSplit();
-                    saveCurrentStateToHistory(); // Save loaded file to undo history
-                    saveLongTermPromptHistory(); // Save loaded file to long-term history
-                    saveAutoPrompt();
-                    showMessage('فایل متنی با موفقیت بارگذاری شد.', 'success');
-                };
-                reader.onerror = () => {
-                    showMessage('خطا در خواندن فایل.', 'error');
-                };
-                reader.readAsText(file);
-            } else {
-                showMessage('لطفاً فقط فایل‌های متنی (.txt) را رها کنید.', 'error');
-            }
-        }
-    });
-    
-    // Handle file input click fallback (though drag-drop is primary)
-    fileInput.addEventListener('change', (e) => {
-        const files = e.target.files;
-        if (files.length > 0) {
-            const file = files[0];
-            if (file.type === 'text/plain') {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    promptInput.value = event.target.result;
-                    updateCharCount();
-                    updateWordCount();
-                    updateTokenCount();
-                    triggerAutoSplit();
-                    saveCurrentStateToHistory(); // Save loaded file to undo history
-                    saveLongTermPromptHistory(); // Save loaded file to long-term history
-                    saveAutoPrompt();
-                    showMessage('فایل متنی با موفقیت بارگذاری شد.', 'success');
-                };
-                reader.onerror = () => {
-                    showMessage('خطا در خواندن فایل.', 'error');
-                };
-                reader.readAsText(file);
-            } else {
-                showMessage('لطفاً فقط فایل‌های متنی (.txt) را انتخاب کنید.', 'error');
-            }
-        }
-    });
-    
-    // Allow clicking the overlay to open file dialog (for accessibility/fallback)
-    dragDropOverlay.addEventListener('click', () => {
-        fileInput.click();
-    });
-
-    // Open file dialog when the upload button is clicked
-    uploadFileButton.addEventListener('click', () => {
-        fileInput.click();
-    });
 
     // --- Event Listeners ---
     
