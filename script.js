@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadExampleButton = document.getElementById('loadExampleButton');
     const clearAllButton = document.getElementById('clearAllButton');
     const clearOutputOnlyButton = document.getElementById('clearOutputOnlyButton');
+    const uploadFileButton = document.getElementById('uploadFileButton');
     const exportTextButton = document.getElementById('exportTextButton');
     const exportMarkdownButton = document.getElementById('exportMarkdownButton'); // New
     const exportJsonButton = document.getElementById('exportJsonButton');
@@ -74,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const aiTemperatureInput = document.getElementById('aiTemperature'); // New
     const aiTopPInput = document.getElementById('aiTopP'); // New
     const aiResponseCharLimitInput = document.getElementById('aiResponseCharLimit'); // New
+    const apiKeyInput = document.getElementById('apiKeyInput'); // New
     
     // AI Response text area counts and bar
     const aiCharCountDisplay = document.getElementById('aiCharCount');
@@ -161,6 +163,10 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (e) {
             console.error('Error loading settings from localStorage:', e);
             applyTheme('light');
+        }
+        const storedApiKey = localStorage.getItem('promptPartoApiKey');
+        if (storedApiKey && apiKeyInput) {
+            apiKeyInput.value = storedApiKey;
         }
         updateMaxCharsPerPart();
         toggleDelimiterInputs();
@@ -1103,6 +1109,12 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {string} commandPrompt - The specific instruction for the AI (e.g., "Summarize", "Rephrase).
      */
     async function sendToAI(textToRefine, commandPrompt) {
+        const apiKey = (apiKeyInput && apiKeyInput.value.trim()) || localStorage.getItem('promptPartoApiKey') || '';
+        if (!apiKey) {
+            showMessage('کلید Gemini API وارد نشده است.', 'error');
+            return;
+        }
+        localStorage.setItem('promptPartoApiKey', apiKey);
         aiResponseTextarea.value = '';
         updateAiResponseCounts(); // Clear counts
         aiLoadingSpinner.classList.remove('hidden');
@@ -1131,7 +1143,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     // Client-side truncation will be applied after response.
                 }
             };
-            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
             
             const response = await fetch(apiUrl, {
@@ -1787,6 +1798,10 @@ document.addEventListener('DOMContentLoaded', () => {
         fileInput.click();
     });
 
+    // Open file dialog when the upload button is clicked
+    uploadFileButton.addEventListener('click', () => {
+        fileInput.click();
+    });
 
     // --- Event Listeners ---
     
@@ -1964,6 +1979,11 @@ document.addEventListener('DOMContentLoaded', () => {
     aiTemperatureInput.addEventListener('input', debounceSaveSettings);
     aiTopPInput.addEventListener('input', debounceSaveSettings);
     aiResponseCharLimitInput.addEventListener('input', debounceSaveSettings);
+    if (apiKeyInput) {
+        apiKeyInput.addEventListener('input', () => {
+            localStorage.setItem('promptPartoApiKey', apiKeyInput.value.trim());
+        });
+    }
     
     includeDelimitersInOutputCheckbox.addEventListener('change', () => {
         saveSettings();
