@@ -63,6 +63,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const insertAiResponseButton = document.getElementById('insertAiResponseButton');
     const aiRefiningPartInfo = document.getElementById('aiRefiningPartInfo'); // Keep for showing current part
     const clearAiResponseButton = document.getElementById('clearAiResponseButton'); // New: Clear AI response button
+    
+    // AI Response text area counts and bar
+    const aiCharCountDisplay = document.getElementById('aiCharCount');
+    const aiWordCountDisplay = document.getElementById('aiWordCount');
+    const aiTokenCountDisplay = document.getElementById('aiTokenCount');
+    const aiResponseCharLimitBarContainer = document.getElementById('aiResponseCharLimitBarContainer');
+    const aiResponseCharLimitBar = document.getElementById('aiResponseCharLimitBar');
 
     // Drag and Drop elements
     const dragDropZone = promptInput; // The textarea is also the drag-drop zone
@@ -253,8 +260,13 @@ document.addEventListener('DOMContentLoaded', () => {
              messageBox.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-700');
         }
         messageBox.classList.remove('hidden');
-        setTimeout(() => {
+        // Clear any existing timeout before setting a new one
+        if (messageBox.timeoutId) {
+            clearTimeout(messageBox.timeoutId);
+        }
+        messageBox.timeoutId = setTimeout(() => {
             messageBox.classList.add('hidden');
+            messageBox.timeoutId = null; // Clear the timeout ID
         }, duration);
     }
 
@@ -297,8 +309,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Updates the character count display.
-     * نمایشگر تعداد کاراکترها را به روز می‌کند.
+     * Updates the character count display for the main prompt input.
+     * نمایشگر تعداد کاراکترها را برای ورودی اصلی پرامپت به روز می‌کند.
      */
     function updateCharCount() {
         const count = promptInput.value.length;
@@ -314,8 +326,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Updates the word count display.
-     * نمایشگر تعداد کلمات را به روز می‌کند.
+     * Updates the word count display for the main prompt input.
+     * نمایشگر تعداد کلمات را برای ورودی اصلی پرامپت به روز می‌کند.
      */
     function updateWordCount() {
         const text = promptInput.value;
@@ -325,8 +337,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Counts tokens (approximation).
-     * تعداد توکن‌ها را (تخمینی) شمارش می‌کند.
+     * Counts tokens (approximation) for the main prompt input.
+     * تعداد توکن‌ها را (تخمینی) برای ورودی اصلی پرامپت شمارش می‌کند.
      * @param {string} text - The text to count tokens for.
      * @returns {number} Estimated token count.
      */
@@ -339,12 +351,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Updates the token count display.
-     * نمایشگر تعداد توکن‌ها را به روز می‌کند.
+     * Updates the token count display for the main prompt input.
+     * نمایشگر تعداد توکن‌ها را برای ورودی اصلی پرامپت به روز می‌کند.
      */
     function updateTokenCount() {
         const tokens = countTokens(promptInput.value);
         tokenCountDisplay.textContent = `توکن‌ها (تخمینی): ${tokens}`;
+    }
+
+    /**
+     * Updates the character count display for the AI response textarea.
+     * نمایشگر تعداد کاراکترها را برای ناحیه متنی پاسخ هوش مصنوعی به روز می‌کند.
+     */
+    function updateAiCharCount() {
+        const count = aiResponseTextarea.value.length;
+        aiCharCountDisplay.textContent = `کاراکترها: ${count}`;
+
+        const percentage = (count / MAX_CHARS_PER_PART) * 100;
+        aiResponseCharLimitBar.style.width = `${Math.min(100, percentage)}%`;
+        // Remove existing classes first
+        aiResponseCharLimitBar.classList.remove('warning', 'danger');
+        if (percentage > 90) {
+            aiResponseCharLimitBar.classList.add('danger');
+        } else if (percentage > 70) {
+            aiResponseCharLimitBar.classList.add('warning');
+        }
+    }
+
+    /**
+     * Updates the word count display for the AI response textarea.
+     * نمایشگر تعداد کلمات را برای ناحیه متنی پاسخ هوش مصنوعی به روز می‌کند.
+     */
+    function updateAiWordCount() {
+        const text = aiResponseTextarea.value;
+        const words = text.match(/\b\w+\b/g);
+        const count = words ? words.length : 0;
+        aiWordCountDisplay.textContent = `کلمات: ${count}`;
+    }
+
+    /**
+     * Updates the token count display for the AI response textarea.
+     * نمایشگر تعداد توکن‌ها را برای ناحیه متنی پاسخ هوش مصنوعی به روز می‌کند.
+     */
+    function updateAiTokenCount() {
+        const tokens = countTokens(aiResponseTextarea.value);
+        aiTokenCountDisplay.textContent = `توکن‌ها (تخمینی): ${tokens}`;
+    }
+
+    /**
+     * Updates all counts for the AI response textarea.
+     * تمام شمارشگرها را برای ناحیه متنی پاسخ هوش مصنوعی به روز می‌کند.
+     */
+    function updateAiResponseCounts() {
+        updateAiCharCount();
+        updateAiWordCount();
+        updateAiTokenCount();
     }
 
 
@@ -813,16 +874,18 @@ document.addEventListener('DOMContentLoaded', () => {
         aiRefiningPartInfo.textContent = `(در حال اصلاح بخش ${partIndex + 1})`; // Update part info
         aiRefiningPartInfo.classList.remove('hidden');
         aiResponseModal.classList.add('open');
+        updateAiResponseCounts(); // Initial update for empty textarea on modal open
     }
 
     /**
      * Sends a request to the Gemini API to refine a prompt part.
      * درخواستی را به API گیمی‌نی برای اصلاح یک بخش از پرامپت ارسال می‌کند.
      * @param {string} textToRefine - The text content to be refined by AI.
-     * @param {string} commandPrompt - The specific instruction for the AI (e.g., "Summarize", "Rephrase").
+     * @param {string} commandPrompt - The specific instruction for the AI (e.g., "Summarize", "Rephrase).
      */
     async function sendToAI(textToRefine, commandPrompt) {
         aiResponseTextarea.value = '';
+        updateAiResponseCounts(); // Clear counts
         aiLoadingSpinner.classList.remove('hidden');
         aiResponseTextarea.classList.add('hidden');
         copyAiResponseButton.disabled = true;
@@ -830,7 +893,7 @@ document.addEventListener('DOMContentLoaded', () => {
         aiSendToAIButton.disabled = true;
         aiSendToAIButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> در حال ارسال...`;
 
-        const finalCommand = aiPromptInput.value.trim() || commandPrompt; // Use aiPromptInput value as primary command
+        const finalCommand = aiPromptInput.value.trim(); // Always use aiPromptInput value
 
         try {
             const prompt = `${finalCommand}:\n\n"${textToRefine}"\n\nلطفا فقط متن اصلاح شده یا خلاصه شده را برگردانید و از هرگونه مقدمه یا خاتمه اضافه خودداری کنید.`;
@@ -871,6 +934,7 @@ document.addEventListener('DOMContentLoaded', () => {
             insertAiResponseButton.disabled = false;
             aiSendToAIButton.disabled = false;
             aiSendToAIButton.innerHTML = `<i class="fas fa-paper-plane ml-2"></i> ارسال به هوش مصنوعی`;
+            updateAiResponseCounts(); // Update counts after AI response is received
         }
     }
 
@@ -884,6 +948,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         currentPartOriginalContent = null;
         currentPartOriginalIndex = -1;
+        aiResponseTextarea.value = ''; // Clear AI response on close
+        updateAiResponseCounts(); // Clear counts
     });
 
     aiSummarizeButton.addEventListener('click', () => {
@@ -987,6 +1053,7 @@ document.addEventListener('DOMContentLoaded', () => {
     clearAiResponseButton.addEventListener('click', () => {
         aiResponseTextarea.value = '';
         showMessage('پاسخ هوش مصنوعی پاک شد.', 'info');
+        updateAiResponseCounts();
     });
 
     insertAiResponseButton.addEventListener('click', () => {
@@ -1016,6 +1083,9 @@ document.addEventListener('DOMContentLoaded', () => {
             showMessage('پاسخ هوش مصنوعی برای درج خالی است.', 'error');
         }
     });
+
+    // Update AI response counts when user types in the AI response textarea
+    aiResponseTextarea.addEventListener('input', updateAiResponseCounts);
 
 
     // --- Drag and Drop Reordering Logic ---
