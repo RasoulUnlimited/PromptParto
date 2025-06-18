@@ -350,6 +350,12 @@
 
         <!-- Output Section -->
         <div id="outputContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Initial empty state message for output container -->
+            <div id="emptyOutputMessage" class="col-span-full text-center text-gray-500 dark:text-gray-400 p-8 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg hidden">
+                <i class="fas fa-info-circle text-4xl mb-4"></i>
+                <p class="text-lg font-medium">هیچ بخش تقسیم‌شده‌ای وجود ندارد.</p>
+                <p class="mt-2 text-sm">پرامپت خود را در بالا وارد کنید و دکمه "تقسیم پرامپت" را فشار دهید تا بخش‌ها اینجا نمایش داده شوند.</p>
+            </div>
             <!-- Split prompt parts will be rendered here -->
         </div>
     </main>
@@ -376,15 +382,15 @@
                 ></textarea>
 
                 <div class="flex flex-wrap gap-2 mb-4 justify-center">
-                    <button id="aiSummarizeButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">خلاصه کن</button>
-                    <button id="aiRephraseButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">بازنویسی کن</button>
-                    <button id="aiElaborateButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">توضیح بده</button>
-                    <button id="aiConciseButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">مختصر کن</button>
-                    <button id="aiExpandButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">گسترش بده</button>
-                    <button id="aiToneFormalButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">لحن رسمی</button>
-                    <button id="aiToneInformalButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">لحن غیررسمی</button>
-                    <button id="aiTranslateEnButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">ترجمه به انگلیسی</button>
-                    <button id="aiTranslateFaButton" class="ai-action-btn bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">ترجمه به فارسی</button>
+                    <button id="aiSummarizeButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">خلاصه کن</button>
+                    <button id="aiRephraseButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">بازنویسی کن</button>
+                    <button id="aiElaborateButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">توضیح بده</button>
+                    <button id="aiConciseButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">مختصر کن</button>
+                    <button id="aiExpandButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">گسترش بده</button>
+                    <button id="aiToneFormalButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">لحن رسمی</button>
+                    <button id="aiToneInformalButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">لحن غیررسمی</button>
+                    <button id="aiTranslateEnButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">ترجمه به انگلیسی</button>
+                    <button id="aiTranslateFaButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">ترجمه به فارسی</button>
                     <button id="aiSendToAIButton" class="ai-action-btn bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm transition-colors duration-200">
                         <i class="fas fa-paper-plane ml-2"></i> ارسال به هوش مصنوعی
                     </button>
@@ -425,7 +431,7 @@
                         <input
                             type="number"
                             id="aiResponseCharLimit"
-                            min="100"
+                            min="0"
                             value="0"
                             class="w-24 p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 shadow-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
                             aria-label="AI Response Character Limit"
