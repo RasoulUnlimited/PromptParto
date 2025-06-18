@@ -10,7 +10,20 @@ PromptParto is a lightweight web tool for breaking long prompts into manageable 
 
 ## Running locally
 
-Simply open `index.html` in your browser. The page loads TailwindCSS and other assets from public CDNs, so an internet connection is required on first load. You can also host the project on GitHub Pages.
+Simply open `index.html` in your browser. Styles are in `css/style.css` and JavaScript in `js/main.js`. The page loads TailwindCSS and other assets from public CDNs, so an internet connection is required on first load. You can also host the project on GitHub Pages.
+
+### Project structure
+
+```
+/
+  index.html
+  css/
+    style.css
+  js/
+    main.js
+  prompts/
+    example.json
+```
 
 ## Example prompt
 

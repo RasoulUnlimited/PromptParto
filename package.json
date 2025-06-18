@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "description": "PromptParto is a lightweight web tool for breaking long prompts into manageable parts. It supports multiple split strategies, dark mode, AI-assisted refinement and undo/redo history.",
-  "main": "script.js",
+  "main": "js/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
