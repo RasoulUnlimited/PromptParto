@@ -7,6 +7,18 @@
     <meta name="description" content="ابزاری هوشمند برای تقسیم پرامپت‌های طولانی به بخش‌های قابل مدیریت">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://promptparto.rasoulunlimited.ir/">
+    <meta property="og:title" content="PromptParto - ابزار هوشمند تقسیم پرامپت">
+    <meta property="og:description" content="ابزاری هوشمند برای تقسیم پرامپت‌های طولانی به بخش‌های قابل مدیریت">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://promptparto.rasoulunlimited.ir/">
+    <meta property="og:image" content="https://promptparto.rasoulunlimited.ir/favicon.ico">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PromptParto - ابزار هوشمند تقسیم پرامپت">
+    <meta name="twitter:description" content="ابزاری هوشمند برای تقسیم پرامپت‌های طولانی به بخش‌های قابل مدیریت">
+    <meta name="twitter:image" content="https://promptparto.rasoulunlimited.ir/favicon.ico">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://promptparto.rasoulunlimited.ir/;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="no-referrer">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com" crossorigin="anonymous"></script>
@@ -22,7 +34,7 @@
     <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 shadow-lg">
         <div class="container mx-auto flex flex-col sm:flex-row items-center justify-between">
             <h1 class="text-3xl font-bold mb-2 sm:mb-0">
-                <i class="fas fa-magic text-blue-200 mr-2"></i>PromptParto
+                <i aria-hidden="true" class="fas fa-magic text-blue-200 mr-2"></i>PromptParto
             </h1>
             <p class="text-lg opacity-90 text-center sm:text-right">
                 ابزاری هوشمند برای تقسیم پرامپت‌های طولانی به بخش‌های قابل مدیریت
@@ -44,7 +56,7 @@
                     ></textarea>
                     <!-- Drag and Drop Overlay -->
                     <label for="fileInput" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-gray-400 dark:text-gray-500 text-lg opacity-0 transition-opacity duration-300 bg-transparent rounded-lg" id="dragDropOverlay">
-                        <i class="fas fa-file-upload text-5xl mb-2"></i> 
+                        <i aria-hidden="true" class="fas fa-file-upload text-5xl mb-2"></i> 
                         <span class="text-xl">فایل متنی را اینجا رها کنید</span>
                     </label>
                     <input type="file" id="fileInput" accept=".txt,.md,.json" class="hidden" aria-label="Upload text file">
@@ -61,7 +73,7 @@
                         </p>
                     </div>
                     <p id="autoSaveStatus" class="text-xs text-gray-400 mt-1 text-center hidden">
-                        <i class="fas fa-check-circle text-green-500 ml-1"></i> ذخیره خودکار شد.
+                        <i aria-hidden="true" class="fas fa-check-circle text-green-500 ml-1"></i> ذخیره خودکار شد.
                     </p>
                 </div>
                 <div class="flex flex-col gap-3 w-full md:w-1/4">
@@ -70,7 +82,7 @@
                         class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Split Prompt"
                     >
-                        <i class="fas fa-cut mr-2"></i> تقسیم پرامپت
+                        <i aria-hidden="true" class="fas fa-cut mr-2"></i> تقسیم پرامپت
                     </button>
                     <button
                         id="copyAllButton"
@@ -78,7 +90,7 @@
                         aria-label="Copy All Parts"
                         disabled
                     >
-                        <i class="fas fa-copy mr-2"></i> کپی همه
+                        <i aria-hidden="true" class="fas fa-copy mr-2"></i> کپی همه
                     </button>
                     <!-- Undo/Redo Buttons -->
                     <div class="flex gap-3">
@@ -88,7 +100,7 @@
                             aria-label="Undo"
                             disabled
                         >
-                            <i class="fas fa-undo mr-2"></i> واگرد
+                            <i aria-hidden="true" class="fas fa-undo mr-2"></i> واگرد
                         </button>
                         <button
                             id="redoButton"
@@ -96,7 +108,7 @@
                             aria-label="Redo"
                             disabled
                         >
-                            <i class="fas fa-redo mr-2"></i> بازگردانی
+                            <i aria-hidden="true" class="fas fa-redo mr-2"></i> بازگردانی
                         </button>
                     </div>
                     <button
@@ -104,21 +116,21 @@
                         class="bg-gray-400 hover:bg-gray-500 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Load Example Prompt"
                     >
-                        <i class="fas fa-file-alt mr-2"></i> بارگذاری مثال
+                        <i aria-hidden="true" class="fas fa-file-alt mr-2"></i> بارگذاری مثال
                     </button>
                     <button
                         id="clearAllButton"
                         class="bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Clear All"
                     >
-                        <i class="fas fa-trash-alt mr-2"></i> پاک کردن همه
+                        <i aria-hidden="true" class="fas fa-trash-alt mr-2"></i> پاک کردن همه
                     </button>
                     <button
                         id="clearOutputOnlyButton"
                         class="bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Clear Output Only"
                     >
-                        <i class="fas fa-eraser mr-2"></i> پاک کردن خروجی
+                        <i aria-hidden="true" class="fas fa-eraser mr-2"></i> پاک کردن خروجی
                     </button>
                     <!-- New: File Upload Button -->
                     <button
@@ -126,7 +138,7 @@
                         class="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
                         aria-label="Upload File"
                     >
-                        <i class="fas fa-upload mr-2"></i> آپلود فایل
+                        <i aria-hidden="true" class="fas fa-upload mr-2"></i> آپلود فایل
                     </button>
                 </div>
             </div>
@@ -218,7 +230,7 @@
                         aria-label="Export All Parts to Text File"
                         disabled
                     >
-                        <i class="fas fa-file-alt mr-2"></i> خروجی متنی (.txt)
+                        <i aria-hidden="true" class="fas fa-file-alt mr-2"></i> خروجی متنی (.txt)
                     </button>
                     <button
                         id="exportMarkdownButton"
@@ -226,7 +238,7 @@
                         aria-label="Export All Parts to Markdown File"
                         disabled
                     >
-                        <i class="fab fa-markdown mr-2"></i> خروجی مارک‌داون (.md)
+                        <i aria-hidden="true" class="fab fa-markdown mr-2"></i> خروجی مارک‌داون (.md)
                     </button>
                     <button
                         id="exportJsonButton"
@@ -234,14 +246,14 @@
                         aria-label="Export All Parts to JSON File"
                         disabled
                     >
-                        <i class="fas fa-file-code mr-2"></i> خروجی JSON (.json)
+                        <i aria-hidden="true" class="fas fa-file-code mr-2"></i> خروجی JSON (.json)
                     </button>
                     <button
                         id="savePromptButton"
                         class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
                         aria-label="Save Current Prompt"
                     >
-                        <i class="fas fa-save mr-2"></i> ذخیره پرامپت
+                        <i aria-hidden="true" class="fas fa-save mr-2"></i> ذخیره پرامپت
                     </button>
                     <div class="relative inline-block text-left z-10">
                         <button
@@ -251,8 +263,8 @@
                             aria-expanded="false"
                             aria-label="Load Saved Prompts"
                         >
-                            <i class="fas fa-folder-open mr-2"></i> بارگذاری پرامپت ذخیره شده
-                            <i class="fas fa-chevron-down ml-2 -mr-1"></i>
+                            <i aria-hidden="true" class="fas fa-folder-open mr-2"></i> بارگذاری پرامپت ذخیره شده
+                            <i aria-hidden="true" class="fas fa-chevron-down ml-2 -mr-1"></i>
                         </button>
                         <div id="loadPromptDropdownMenu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu" aria-orientation="vertical" aria-labelledby="loadPromptDropdownToggle">
                             <div class="py-1" role="none" id="savedPromptsList">
@@ -273,8 +285,8 @@
                             aria-expanded="false"
                             aria-label="Prompt History"
                         >
-                            <i class="fas fa-history mr-2"></i> تاریخچه پرامپت
-                            <i class="fas fa-chevron-down ml-2 -mr-1"></i>
+                            <i aria-hidden="true" class="fas fa-history mr-2"></i> تاریخچه پرامپت
+                            <i aria-hidden="true" class="fas fa-chevron-down ml-2 -mr-1"></i>
                         </button>
                         <div id="promptHistoryDropdownMenu" class="origin-top-right absolute right-0 mt-2 w-72 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none hidden max-h-60 overflow-y-auto" role="menu" aria-orientation="vertical" aria-labelledby="promptHistoryDropdownToggle">
                             <div class="py-1" role="none" id="historyList">
@@ -287,7 +299,7 @@
                                     class="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-200 flex items-center justify-center text-sm hidden"
                                     aria-label="Clear Prompt History"
                                 >
-                                    <i class="fas fa-trash-alt mr-2"></i> پاک کردن تاریخچه
+                                    <i aria-hidden="true" class="fas fa-trash-alt mr-2"></i> پاک کردن تاریخچه
                                 </button>
                             </div>
                         </div>
@@ -297,7 +309,7 @@
                         class="bg-purple-500 hover:bg-purple-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
                         aria-label="Share Current Prompt and Settings"
                     >
-                        <i class="fas fa-share-alt mr-2"></i> اشتراک‌گذاری
+                        <i aria-hidden="true" class="fas fa-share-alt mr-2"></i> اشتراک‌گذاری
                     </button>
                     <!-- Prompt Templates Dropdown -->
                     <div class="relative inline-block text-left z-10">
@@ -308,8 +320,8 @@
                             aria-expanded="false"
                             aria-label="Load Prompt Templates"
                         >
-                            <i class="fas fa-file-contract mr-2"></i> الگوهای پرامپت
-                            <i class="fas fa-chevron-down ml-2 -mr-1"></i>
+                            <i aria-hidden="true" class="fas fa-file-contract mr-2"></i> الگوهای پرامپت
+                            <i aria-hidden="true" class="fas fa-chevron-down ml-2 -mr-1"></i>
                         </button>
                         <div id="templateDropdownMenu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none hidden max-h-60 overflow-y-auto" role="menu" aria-orientation="vertical" aria-labelledby="templateDropdownToggle">
                             <div class="py-1" role="none" id="templateList">
@@ -322,7 +334,7 @@
                                     class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-200 flex items-center justify-center text-sm"
                                     aria-label="Add New Template"
                                 >
-                                    <i class="fas fa-plus mr-2"></i> افزودن الگو
+                                    <i aria-hidden="true" class="fas fa-plus mr-2"></i> افزودن الگو
                                 </button>
                             </div>
                         </div>
@@ -337,28 +349,28 @@
                         class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
                         aria-label="Clean Empty Lines"
                     >
-                        <i class="fas fa-eraser mr-2"></i> حذف خطوط خالی اضافی
+                        <i aria-hidden="true" class="fas fa-eraser mr-2"></i> حذف خطوط خالی اضافی
                     </button>
                     <button
                         id="trimWhitespaceButton"
                         class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
                         aria-label="Trim Extra Whitespace"
                     >
-                        <i class="fas fa-text-width mr-2"></i> حذف فضاهای اضافی
+                        <i aria-hidden="true" class="fas fa-text-width mr-2"></i> حذف فضاهای اضافی
                     </button>
                     <button
                         id="lowercaseButton"
                         class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
                         aria-label="Convert to Lowercase"
                     >
-                        <i class="fas fa-font mr-2"></i> تبدیل به حروف کوچک
+                        <i aria-hidden="true" class="fas fa-font mr-2"></i> تبدیل به حروف کوچک
                     </button>
                     <button
                         id="uppercaseButton"
                         class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
                         aria-label="Convert to Uppercase"
                     >
-                        <i class="fas fa-text-height mr-2"></i> تبدیل به حروف بزرگ
+                        <i aria-hidden="true" class="fas fa-text-height mr-2"></i> تبدیل به حروف بزرگ
                     </button>
                 </div>
 
@@ -369,14 +381,14 @@
                         class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
                         aria-label="Export All Application Data"
                     >
-                        <i class="fas fa-file-export mr-2"></i> خروجی گرفتن از تمام داده‌ها
+                        <i aria-hidden="true" class="fas fa-file-export mr-2"></i> خروجی گرفتن از تمام داده‌ها
                     </button>
                     <button
                         id="importAllDataButton"
                         class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base"
                         aria-label="Import All Application Data"
                     >
-                        <i class="fas fa-file-import mr-2"></i> وارد کردن تمام داده‌ها
+                        <i aria-hidden="true" class="fas fa-file-import mr-2"></i> وارد کردن تمام داده‌ها
                     </button>
                     <input type="file" id="importFileInput" accept=".json" class="hidden">
                 </div>
@@ -388,7 +400,7 @@
                         class="bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded-full shadow-md transition duration-200 flex items-center justify-center text-sm"
                         aria-label="Toggle Compact View"
                     >
-                        <i class="fas fa-compress-alt ml-2"></i> <span id="compactViewText">حالت فشرده</span>
+                        <i aria-hidden="true" class="fas fa-compress-alt ml-2"></i> <span id="compactViewText">حالت فشرده</span>
                     </button>
                 </div>
 
@@ -401,14 +413,14 @@
                     class="bg-gray-700 hover:bg-gray-900 text-white py-2 px-4 rounded-full shadow-md transition duration-200 flex items-center justify-center text-sm"
                     aria-label="Toggle Dark Mode"
                 >
-                    <i class="fas fa-moon ml-2"></i> <span id="darkModeText">حالت تاریک</span>
+                    <i aria-hidden="true" class="fas fa-moon ml-2"></i> <span id="darkModeText">حالت تاریک</span>
                 </button>
             </div>
 
             <div id="messageBox" class="p-4 rounded-lg relative hidden mt-6" role="alert" aria-live="polite">
                 <span id="messageText"></span>
                 <span class="absolute top-0 bottom-0 left-0 px-4 py-3 cursor-pointer" onclick="document.getElementById('messageBox').classList.add('hidden');" aria-label="Close Message">
-                    <i class="fas fa-times"></i>
+                    <i aria-hidden="true" class="fas fa-times"></i>
                 </span>
             </div>
         </div>
@@ -417,7 +429,7 @@
         <div id="outputContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Initial empty state message for output container -->
             <div id="emptyOutputMessage" class="col-span-full text-center text-gray-500 dark:text-gray-400 p-8 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg hidden">
-                <i class="fas fa-info-circle text-4xl mb-4"></i>
+                <i aria-hidden="true" class="fas fa-info-circle text-4xl mb-4"></i>
                 <p class="text-lg font-medium">هیچ بخش تقسیم‌شده‌ای وجود ندارد.</p>
                 <p class="mt-2 text-sm">پرامپت خود را در بالا وارد کنید و دکمه "تقسیم پرامپت" را فشار دهید تا بخش‌ها اینجا نمایش داده شوند.</p>
             </div>
@@ -434,7 +446,7 @@
                     <span id="aiRefiningPartInfo" class="text-sm text-gray-500 dark:text-gray-400 hidden mr-2"></span>
                 </h3>
                 <button type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" id="closeAiModal" aria-label="Close AI Response Modal">
-                    <i class="fas fa-times text-2xl"></i>
+                    <i aria-hidden="true" class="fas fa-times text-2xl"></i>
                 </button>
             </div>
             <div class="mt-4">
@@ -457,13 +469,13 @@
                     <button id="aiTranslateEnButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">ترجمه به انگلیسی</button>
                     <button id="aiTranslateFaButton" class="ai-action-btn bg-blue-100 hover:bg-blue-200 text-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200 py-2 px-4 rounded-md text-sm transition-colors duration-200">ترجمه به فارسی</button>
                     <button id="aiConvertMarkdownButton" class="ai-action-btn bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md text-sm transition-colors duration-200">
-                        <i class="fab fa-markdown ml-2"></i> تبدیل به مارک‌داون
+                        <i aria-hidden="true" class="fab fa-markdown ml-2"></i> تبدیل به مارک‌داون
                     </button>
                     <button id="aiConvertJsonButton" class="ai-action-btn bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md text-sm transition-colors duration-200">
-                        <i class="fas fa-file-code ml-2"></i> تبدیل به JSON
+                        <i aria-hidden="true" class="fas fa-file-code ml-2"></i> تبدیل به JSON
                     </button>
                     <button id="aiSendToAIButton" class="ai-action-btn bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md text-sm transition-colors duration-200">
-                        <i class="fas fa-paper-plane ml-2"></i> ارسال به هوش مصنوعی
+                        <i aria-hidden="true" class="fas fa-paper-plane ml-2"></i> ارسال به هوش مصنوعی
                     </button>
                 </div>
                 
@@ -522,7 +534,7 @@
                 </div>
 
                 <div id="aiLoadingSpinner" class="flex justify-center items-center py-8 hidden">
-                    <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
+                    <i aria-hidden="true" class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
                     <p class="text-lg text-gray-600 dark:text-gray-300 mr-4">در حال پردازش...</p>
                 </div>
                 <textarea
@@ -554,21 +566,21 @@
                     class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-200 flex items-center"
                     aria-label="Copy AI Response"
                 >
-                    <i class="fas fa-copy mr-2"></i> کپی پاسخ
+                    <i aria-hidden="true" class="fas fa-copy mr-2"></i> کپی پاسخ
                 </button>
                 <button
                     id="clearAiResponseButton"
                     class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-200 flex items-center"
                     aria-label="Clear AI Response"
                 >
-                    <i class="fas fa-eraser mr-2"></i> پاک کردن پاسخ
+                    <i aria-hidden="true" class="fas fa-eraser mr-2"></i> پاک کردن پاسخ
                 </button>
                 <button
                     id="insertAiResponseButton"
                     class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg shadow-md transition duration-200 flex items-center"
                     aria-label="Insert AI Response into Prompt Input"
                 >
-                    <i class="fas fa-arrow-left mr-2"></i> درج در پرامپت اصلی
+                    <i aria-hidden="true" class="fas fa-arrow-left mr-2"></i> درج در پرامپت اصلی
                 </button>
             </div>
         </div>
@@ -580,7 +592,7 @@
             <div class="flex justify-between items-center pb-3 border-b dark:border-gray-700">
                 <h3 id="confirmationTitle" class="text-xl font-semibold text-gray-900 dark:text-gray-100">تأیید</h3>
                 <button type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" id="closeConfirmationModal" aria-label="Close Confirmation Modal">
-                    <i class="fas fa-times text-2xl"></i>
+                    <i aria-hidden="true" class="fas fa-times text-2xl"></i>
                 </button>
             </div>
             <div class="mt-4 mb-6">
@@ -599,7 +611,7 @@
             <div class="flex justify-between items-center pb-3 border-b dark:border-gray-700">
                 <h3 id="inputModalTitle" class="text-xl font-semibold text-gray-900 dark:text-gray-100">عنوان مودال</h3>
                 <button type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" id="inputModalClose" aria-label="Close Input Modal">
-                    <i class="fas fa-times text-2xl"></i>
+                    <i aria-hidden="true" class="fas fa-times text-2xl"></i>
                 </button>
             </div>
             <div class="mt-4 mb-4">
@@ -626,7 +638,7 @@
             <p class="text-sm">
                 ساخته شده با ❤️ برای جامعه‌ی متن‌باز.
                 <a href="https://github.com/RasoulUnlimited/PromptParto" target="_blank" class="text-blue-400 hover:underline" aria-label="PromptParto GitHub Repository">
-                    <i class="fab fa-github ml-1"></i> سورس کد در گیت‌هاب
+                    <i aria-hidden="true" class="fab fa-github ml-1"></i> سورس کد در گیت‌هاب
                 </a>
             </p>
         </div>

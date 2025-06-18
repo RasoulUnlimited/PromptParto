@@ -5,7 +5,9 @@
   "description": "PromptParto is a lightweight web tool for breaking long prompts into manageable parts. It supports multiple split strategies, dark mode, AI-assisted refinement and undo/redo history.",
   "main": "js/main.js",
   "scripts": {
-    "lint": "eslint js/**/*.js",
+    "lint": "npm run lint:js && npm run lint:css",
+    "lint:js": "eslint js/**/*.js",
+    "lint:css": "stylelint \"css/**/*.css\"",
     "test": "echo \"No tests yet\""
   },
   "keywords": [],
@@ -14,6 +16,7 @@
   "devDependencies": {
     "eslint": "^9.29.0",
     "htmlhint": "^1.6.2",
-    "stylelint": "^16.20.0"
+    "stylelint": "^16.20.0",
+    "stylelint-config-standard": "^36.0.0"
   }
 }
