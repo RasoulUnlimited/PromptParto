@@ -1,0 +1,21 @@
+# user data
+*.json
+promptparto_data.json
+
+# OS files
+.DS_Store
+
+# build artifacts
+dist/
+build/
+
+# dependencies
+node_modules/
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# environment files
+.env
