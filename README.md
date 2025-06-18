@@ -50,3 +50,14 @@ To use the AI refine features you must provide a valid Gemini API key. Open the 
 - `Ctrl+O` – Clear output only.
 - `Ctrl+H` – Show history.
 - `Ctrl+T` – Show templates.
+
+## Development
+
+Install dependencies with `npm install`, then run the linters and tests:
+
+```bash
+npm run lint
+npm test
+```
+
+`npm run lint` checks all JavaScript files under `js/` using ESLint. The `test` script currently prints a placeholder message.
