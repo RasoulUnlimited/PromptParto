@@ -1,10 +1,10 @@
 export async function sendToAI(textToRefine, commandPrompt) {
-    const apiKey = (window.apiKeyInput && window.apiKeyInput.value.trim()) || localStorage.getItem('promptPartoApiKey') || '';
+    const apiKey = (window.apiKeyInput && window.apiKeyInput.value.trim()) || sessionStorage.getItem('promptPartoApiKey') || '';
     if (!apiKey) {
         window.showMessage('کلید Gemini API وارد نشده است.', 'error');
         return;
     }
-    localStorage.setItem('promptPartoApiKey', apiKey);
+    sessionStorage.setItem('promptPartoApiKey', apiKey);
     window.aiResponseTextarea.value = '';
     window.updateAiResponseCounts();
     window.aiLoadingSpinner.classList.remove('hidden');

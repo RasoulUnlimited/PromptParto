@@ -7,6 +7,20 @@
     <meta name="description" content="ابزاری هوشمند برای تقسیم پرامپت‌های طولانی به بخش‌های قابل مدیریت">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://promptparto.rasoulunlimited.ir/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <meta property="og:title" content="PromptParto - ابزار هوشمند تقسیم پرامپت">
+    <meta property="og:description" content="ابزاری هوشمند برای تقسیم پرامپت‌های طولانی به بخش‌های قابل مدیریت">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://promptparto.rasoulunlimited.ir/">
+    <meta property="og:image" content="https://promptparto.rasoulunlimited.ir/favicon.ico">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PromptParto - ابزار هوشمند تقسیم پرامپت">
+    <meta name="twitter:description" content="ابزاری هوشمند برای تقسیم پرامپت‌های طولانی به بخش‌های قابل مدیریت">
+    <meta name="twitter:image" content="https://promptparto.rasoulunlimited.ir/favicon.ico">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.tailwindcss.com https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://promptparto.rasoulunlimited.ir/;">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="no-referrer">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com" crossorigin="anonymous"></script>
@@ -22,7 +36,7 @@
     <header class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 shadow-lg">
         <div class="container mx-auto flex flex-col sm:flex-row items-center justify-between">
             <h1 class="text-3xl font-bold mb-2 sm:mb-0">
-                <i class="fas fa-magic text-blue-200 mr-2"></i>PromptParto
+                <i aria-hidden="true" class="fas fa-magic text-blue-200 mr-2"></i>PromptParto
             </h1>
             <p class="text-lg opacity-90 text-center sm:text-right">
                 ابزاری هوشمند برای تقسیم پرامپت‌های طولانی به بخش‌های قابل مدیریت
@@ -44,7 +58,7 @@
                     ></textarea>
                     <!-- Drag and Drop Overlay -->
                     <label for="fileInput" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-gray-400 dark:text-gray-500 text-lg opacity-0 transition-opacity duration-300 bg-transparent rounded-lg" id="dragDropOverlay">
-                        <i class="fas fa-file-upload text-5xl mb-2"></i> 
+                        <i aria-hidden="true" class="fas fa-file-upload text-5xl mb-2"></i> 
                         <span class="text-xl">فایل متنی را اینجا رها کنید</span>
                     </label>
                     <input type="file" id="fileInput" accept=".txt,.md,.json" class="hidden" aria-label="Upload text file">
@@ -61,7 +75,7 @@
                         </p>
                     </div>
                     <p id="autoSaveStatus" class="text-xs text-gray-400 mt-1 text-center hidden">
-                        <i class="fas fa-check-circle text-green-500 ml-1"></i> ذخیره خودکار شد.
+                        <i aria-hidden="true" class="fas fa-check-circle text-green-500 ml-1"></i> ذخیره خودکار شد.
                     </p>
                 </div>
                 <div class="flex flex-col gap-3 w-full md:w-1/4">
@@ -70,7 +84,7 @@
                         class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Split Prompt"
                     >
-                        <i class="fas fa-cut mr-2"></i> تقسیم پرامپت
+                    <i aria-hidden="true" class="fas fa-cut mr-2"></i> تقسیم پرامپت
                     </button>
                     <button
                         id="copyAllButton"
@@ -78,7 +92,7 @@
                         aria-label="Copy All Parts"
                         disabled
                     >
-                        <i class="fas fa-copy mr-2"></i> کپی همه
+                    <i aria-hidden="true" class="fas fa-copy mr-2"></i> کپی همه
                     </button>
                     <!-- Undo/Redo Buttons -->
                     <div class="flex gap-3">
@@ -88,7 +102,7 @@
                             aria-label="Undo"
                             disabled
                         >
-                            <i class="fas fa-undo mr-2"></i> واگرد
+                            <i aria-hidden="true" class="fas fa-undo mr-2"></i> واگرد
                         </button>
                         <button
                             id="redoButton"
@@ -96,7 +110,7 @@
                             aria-label="Redo"
                             disabled
                         >
-                            <i class="fas fa-redo mr-2"></i> بازگردانی
+                            <i aria-hidden="true" class="fas fa-redo mr-2"></i> بازگردانی
                         </button>
                     </div>
                     <button

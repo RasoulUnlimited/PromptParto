@@ -35,7 +35,7 @@ PromptParto saves your settings, saved prompts and history in your browser's `lo
 
 ## Gemini API key
 
-To use the AI refine features you must provide a valid Gemini API key. Open the AI modal, scroll to **Advanced Settings**, and paste your key in the **Gemini API Key** field. The key is saved in your browser's `localStorage` (`promptPartoApiKey`). Without this key the AI actions will show an error.
+To use the AI refine features you must provide a valid Gemini API key. Open the AI modal, scroll to **Advanced Settings**, and paste your key in the **Gemini API Key** field. The key is saved in your browser's `sessionStorage` (`promptPartoApiKey`). Without this key the AI actions will show an error.
 
 ## Keyboard shortcuts
 
