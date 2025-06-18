@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const promptHistoryDropdownToggle = document.getElementById('promptHistoryDropdownToggle');
     const promptHistoryDropdownMenu = document.getElementById('promptHistoryDropdownMenu');
     const historyList = document.getElementById('historyList');
-    const clearHistoryButton = document.getElementById('clearHistoryButton');
+    const clearHistoryButton = document.getElementById('clearHistoryButton'); // New: Clear history button
 
     // Share and Data Management buttons
     const shareButton = document.getElementById('shareButton');
@@ -61,21 +61,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const aiSendToAIButton = document.getElementById('aiSendToAIButton');
     const copyAiResponseButton = document.getElementById('copyAiResponseButton');
     const insertAiResponseButton = document.getElementById('insertAiResponseButton');
-    const aiRefiningPartInfo = document.getElementById('aiRefiningPartInfo');
-    const clearAiResponseButton = document.getElementById('clearAiResponseButton');
+    const aiRefiningPartInfo = document.getElementById('aiRefiningPartInfo'); // Keep for showing current part
+    const clearAiResponseButton = document.getElementById('clearAiResponseButton'); // New: Clear AI response button
 
     // Drag and Drop elements
     const dragDropZone = promptInput; // The textarea is also the drag-drop zone
     const dragDropOverlay = document.getElementById('dragDropOverlay');
     const fileInput = document.getElementById('fileInput');
 
-    // Custom Confirmation Modal elements
-    const confirmModal = document.getElementById('confirmationModal');
-    const confirmTitle = document.getElementById('confirmationTitle');
-    const confirmMessage = document.getElementById('confirmationMessage');
-    const closeConfirmModalButton = document.getElementById('closeConfirmationModal');
-    const cancelConfirmButton = document.getElementById('cancelConfirmationButton');
-    const confirmActionButton = document.getElementById('confirmActionButton');
+    // Custom Confirmation Modal elements (Renamed from previous iteration for clarity)
+    const confirmModal = document.getElementById('confirmationModal'); // Updated ID from HTML
+    const confirmTitle = document.getElementById('confirmationTitle'); // Updated ID from HTML
+    const confirmMessage = document.getElementById('confirmationMessage'); // Updated ID from HTML
+    const closeConfirmModalButton = document.getElementById('closeConfirmationModal'); // Updated ID from HTML
+    const cancelConfirmButton = document.getElementById('cancelConfirmationButton'); // Updated ID from HTML
+    const confirmActionButton = document.getElementById('confirmActionButton'); // Updated ID from HTML
     let confirmationCallback = null; // Callback function for confirmation
 
     // Default constants for splitting logic
@@ -126,8 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error('Error loading settings from localStorage:', e);
-            showMessage('خطا در بارگذاری تنظیمات از حافظه محلی.', 'error');
-            applyTheme('light'); // Fallback to light theme on error
+            applyTheme('light');
         }
         updateMaxCharsPerPart();
         toggleDelimiterInputs();
@@ -165,12 +164,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.add('dark');
             darkModeText.textContent = 'حالت روشن';
             darkModeToggle.querySelector('i').classList.replace('fa-moon', 'fa-sun');
-            darkModeToggle.setAttribute('aria-label', 'Toggle light mode');
         } else {
             document.body.classList.remove('dark');
             darkModeText.textContent = 'حالت تاریک';
             darkModeToggle.querySelector('i').classList.replace('fa-sun', 'fa-moon');
-            darkModeToggle.setAttribute('aria-label', 'Toggle dark mode');
         }
     }
 
@@ -195,8 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmMessage.textContent = message;
         confirmationCallback = onConfirmCallback;
         confirmModal.classList.remove('hidden');
-        confirmModal.setAttribute('aria-modal', 'true');
-        confirmModal.setAttribute('role', 'dialog');
+        confirmModal.setAttribute('aria-modal', 'true'); // Add aria-modal
+        confirmModal.setAttribute('role', 'dialog'); // Add role dialog
     }
 
     /**
@@ -205,9 +202,9 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function hideConfirmationModal() {
         confirmModal.classList.add('hidden');
-        confirmModal.removeAttribute('aria-modal');
-        confirmModal.removeAttribute('role');
         confirmationCallback = null;
+        confirmModal.removeAttribute('aria-modal'); // Remove aria-modal
+        confirmModal.removeAttribute('role'); // Remove role dialog
     }
 
     // Event listeners for custom confirmation modal buttons
@@ -228,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateMaxCharsPerPart() {
         let newValue = parseInt(maxCharsPerPartInput.value, 10);
         if (isNaN(newValue) || newValue < MIN_CHARS_FOR_NEW_SPLIT) {
-            newValue = 3800; // Fallback to default
+            newValue = 3800;
             maxCharsPerPartInput.value = newValue;
             showMessage('حداکثر کاراکتر باید یک عدد معتبر و حداقل 100 باشد. به مقدار پیش‌فرض تنظیم شد.', 'error');
         }
@@ -241,13 +238,11 @@ document.addEventListener('DOMContentLoaded', () => {
      * پیامی را در جعبه پیام نمایش می‌دهد.
      * @param {string} message - The message to display.
      * @param {string} type - 'success', 'error', or 'info'.
+     * @param {number} [duration=5000] - Duration in milliseconds to show the message.
      */
-    function showMessage(message, type) {
-        // Clear any existing timeout to prevent messages from disappearing too quickly
-        clearTimeout(messageBox.hideTimeout);
-
+    function showMessage(message, type, duration = 5000) {
         messageText.textContent = message;
-        messageBox.className = 'p-4 rounded-lg relative mt-6'; // Reset classes
+        messageBox.className = 'p-4 rounded-lg relative mt-6';
         messageBox.classList.add('border');
 
         if (type === 'success') {
@@ -258,13 +253,9 @@ document.addEventListener('DOMContentLoaded', () => {
              messageBox.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-700');
         }
         messageBox.classList.remove('hidden');
-        messageBox.setAttribute('aria-live', 'assertive'); // Announce message to screen readers
-
-        // Set a new timeout to hide the message
-        messageBox.hideTimeout = setTimeout(() => {
+        setTimeout(() => {
             messageBox.classList.add('hidden');
-            messageBox.removeAttribute('aria-live');
-        }, 5000);
+        }, duration);
     }
 
     /**
@@ -275,11 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {HTMLElement} [buttonElement] - Optional: The button element to provide visual feedback.
      */
     function copyTextToClipboard(text, feedbackName = 'متن', buttonElement = null) {
-        if (!text) {
-            showMessage(`هیچ ${feedbackName} برای کپی کردن وجود ندارد.`, 'error');
-            return;
-        }
-
         const textarea = document.createElement('textarea');
         textarea.value = text;
         textarea.style.position = 'fixed';
@@ -294,15 +280,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (buttonElement) {
                 const originalText = buttonElement.innerHTML;
-                const originalAriaLabel = buttonElement.getAttribute('aria-label');
                 buttonElement.classList.add('copied');
                 buttonElement.innerHTML = `<i class="fas fa-check ml-2"></i> کپی شد!`;
-                buttonElement.setAttribute('aria-label', 'Copied!');
-                
                 setTimeout(() => {
                     buttonElement.innerHTML = originalText;
                     buttonElement.classList.remove('copied');
-                    buttonElement.setAttribute('aria-label', originalAriaLabel);
                 }, 1500);
             }
 
@@ -315,21 +297,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * Updates character, word, and token counts.
-     * شمارش کاراکتر، کلمه و توکن را به روز می‌کند.
+     * Updates the character count display.
+     * نمایشگر تعداد کاراکترها را به روز می‌کند.
      */
-    function updateCounts() {
-        const text = promptInput.value;
-        const charCount = text.length;
-        const words = text.match(/\b\w+\b/g);
-        const wordCount = words ? words.length : 0;
-        const tokenCount = Math.ceil(wordCount * 1.5); // Simple approximation
+    function updateCharCount() {
+        const count = promptInput.value.length;
+        charCountDisplay.textContent = `کاراکترها: ${count}`;
 
-        charCountDisplay.textContent = `کاراکترها: ${charCount}`;
-        wordCountDisplay.textContent = `کلمات: ${wordCount}`;
-        tokenCountDisplay.textContent = `توکن‌ها (تخمینی): ${tokenCount}`;
-
-        if (charCount > MAX_CHARS_PER_PART) {
+        if (count > MAX_CHARS_PER_PART) {
             charCountDisplay.classList.remove('text-gray-500', 'dark:text-gray-400');
             charCountDisplay.classList.add('text-red-600', 'font-bold');
         } else {
@@ -339,14 +314,59 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Updates the word count display.
+     * نمایشگر تعداد کلمات را به روز می‌کند.
+     */
+    function updateWordCount() {
+        const text = promptInput.value;
+        const words = text.match(/\b\w+\b/g);
+        const count = words ? words.length : 0;
+        wordCountDisplay.textContent = `کلمات: ${count}`;
+    }
+
+    /**
+     * Counts tokens (approximation).
+     * تعداد توکن‌ها را (تخمینی) شمارش می‌کند.
+     * @param {string} text - The text to count tokens for.
+     * @returns {number} Estimated token count.
+     */
+    function countTokens(text) {
+        // Simple approximation: 1 token ~ 4 characters, or ~0.75 words for English.
+        // For Persian, tokenization is more complex. This is a very rough estimation based on words.
+        const words = text.match(/\b\w+\b/g);
+        const wordCount = words ? words.length : 0;
+        return Math.ceil(wordCount * 1.5); // A slightly higher multiplier for safer estimation
+    }
+
+    /**
+     * Updates the token count display.
+     * نمایشگر تعداد توکن‌ها را به روز می‌کند.
+     */
+    function updateTokenCount() {
+        const tokens = countTokens(promptInput.value);
+        tokenCountDisplay.textContent = `توکن‌ها (تخمینی): ${tokens}`;
+    }
+
+
+    /**
      * Clears the prompt input and output area.
      * ورودی پرامپت و ناحیه خروجی را پاک می‌کند.
      */
     function clearAll() {
         promptInput.value = '';
         outputContainer.innerHTML = '';
-        updateCounts();
-        disableOutputButtons();
+        updateCharCount();
+        updateWordCount();
+        updateTokenCount(); // Clear token count
+        copyAllButton.disabled = true;
+        copyAllButton.classList.add('opacity-50', 'cursor-not-allowed');
+        exportTextButton.disabled = true;
+        exportTextButton.classList.add('opacity-50', 'cursor-not-allowed');
+        exportJsonButton.disabled = true;
+        exportJsonButton.classList.add('opacity-50', 'cursor-not-allowed');
+        clearOutputOnlyButton.disabled = true;
+        clearOutputOnlyButton.classList.add('opacity-50', 'cursor-not-allowed');
+
         showMessage('همه چیز پاک شد.', 'success');
         saveCurrentPromptState(); // Save empty state to history
     }
@@ -357,15 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function clearOutputOnly() {
         outputContainer.innerHTML = '';
-        disableOutputButtons();
-        showMessage('خروجی پاک شد.', 'info');
-    }
-
-    /**
-     * Disables buttons related to output content when no output is present.
-     * دکمه‌های مربوط به محتوای خروجی را در صورت عدم وجود خروجی غیرفعال می‌کند.
-     */
-    function disableOutputButtons() {
         copyAllButton.disabled = true;
         copyAllButton.classList.add('opacity-50', 'cursor-not-allowed');
         exportTextButton.disabled = true;
@@ -374,21 +385,7 @@ document.addEventListener('DOMContentLoaded', () => {
         exportJsonButton.classList.add('opacity-50', 'cursor-not-allowed');
         clearOutputOnlyButton.disabled = true;
         clearOutputOnlyButton.classList.add('opacity-50', 'cursor-not-allowed');
-    }
-
-    /**
-     * Enables buttons related to output content when output is present.
-     * دکمه‌های مربوط به محتوای خروجی را در صورت وجود خروجی فعال می‌کند.
-     */
-    function enableOutputButtons() {
-        copyAllButton.disabled = false;
-        copyAllButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        exportTextButton.disabled = false;
-        exportTextButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        exportJsonButton.disabled = false;
-        exportJsonButton.classList.remove('opacity-50', 'cursor-not-allowed');
-        clearOutputOnlyButton.disabled = false;
-        clearOutputOnlyButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        showMessage('خروجی پاک شد.', 'info');
     }
 
     /**
@@ -453,8 +450,11 @@ document.addEventListener('DOMContentLoaded', () => {
      * @returns {boolean} True if the line likely belongs to a block/list, false otherwise.
      */
     function isLikelyMarkdownBlockLine(line) {
+        // Checks for fenced code blocks (```)
         if (line.trim().startsWith('```')) return true;
+        // Checks for list items (-, *, +, 1., 2.)
         if (/^\s*([-*+]|\d+\.)\s/.test(line)) return true;
+        // Checks for indented code blocks (4 spaces or a tab)
         if (line.startsWith('    ') || line.startsWith('\t')) return true;
         return false;
     }
@@ -477,8 +477,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let initialChunks = [];
 
+        // Determine initial chunks based on selected strategy
         if (strategy === 'custom' && customDelim.length > 0) {
             if (includeDelimiters) {
+                // If delimiters should be included, split while preserving them
                 const partsWithDelim = [];
                 let currentIndex = 0;
                 while (true) {
@@ -492,20 +494,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 initialChunks = partsWithDelim;
             } else {
+                // Standard split by custom delimiter
                 initialChunks = prompt.split(customDelim);
             }
 
         } else if (strategy === 'regex' && regexDelim.length > 0) {
             try {
+                // Use regex for splitting, capturing the delimiter if needed
                 const regex = new RegExp(`(${regexDelim})`, 'g');
                 const splitResult = prompt.split(regex);
                 
                 if (includeDelimiters) {
+                    // Recombine content with their delimiters if includeDelimiters is true
                     const tempCombined = [];
                     for (let i = 0; i < splitResult.length; i++) {
-                        if (i % 2 === 0) {
+                        if (i % 2 === 0) { // Content part
                             let currentContent = splitResult[i] || '';
-                            if (i + 1 < splitResult.length) {
+                            if (i + 1 < splitResult.length) { // Check for corresponding delimiter
                                 currentContent += (splitResult[i + 1] || '');
                             }
                             if (currentContent.trim() !== '') {
@@ -515,6 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     initialChunks = tempCombined;
                 } else {
+                    // Filter out delimiters if not included
                     initialChunks = splitResult.filter((_, i) => i % 2 === 0 && _.trim() !== '');
                 }
             } catch (e) {
@@ -523,15 +529,19 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
         } else if (strategy === 'paragraph') {
+            // Split by double newline (paragraphs)
             initialChunks = prompt.split('\n\n');
         } else if (strategy === 'line') {
+            // Split by single newline (lines)
             initialChunks = prompt.split('\n');
-        } else {
+        } else { // 'auto' strategy or fallback
+            // Default to paragraph splitting for 'auto'
             initialChunks = prompt.split('\n\n');
         }
 
         const parts = [];
 
+        // Process initial chunks to respect MAX_CHARS_PER_PART
         initialChunks.forEach(chunk => {
             chunk = chunk.trim();
             if (chunk === '') return;
@@ -539,13 +549,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (chunk.length <= MAX_CHARS_PER_PART) {
                 parts.push(chunk);
             } else {
+                // If a chunk is too long, further split it by lines or as a single large block
                 let subChunksToProcess;
                 if (strategy === 'auto' || strategy === 'paragraph' || strategy === 'custom' || (strategy === 'regex' && includeDelimiters)) {
-                    subChunksToProcess = chunk.split('\n');
+                    subChunksToProcess = chunk.split('\n'); // Break into lines for further splitting
                 } else if (strategy === 'regex' && !includeDelimiters) {
-                    subChunksToProcess = [chunk];
+                    subChunksToProcess = [chunk]; // Keep as one chunk for character-level splitting below
                 } else {
-                    subChunksToProcess = [chunk];
+                    subChunksToProcess = [chunk]; // Default fallback for direct character splitting
                 }
 
                 let tempPart = '';
@@ -557,12 +568,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     if ((tempPart + proposedAddition).length <= MAX_CHARS_PER_PART) {
                         tempPart += proposedAddition;
                     } else {
+                        // If adding the next subChunk exceeds limit, push current tempPart and start new
                         if (tempPart !== '') {
                             parts.push(tempPart);
                         }
                         tempPart = subChunk;
                     }
                 }
+                // Push any remaining tempPart after the loop
                 if (tempPart !== '') {
                     parts.push(tempPart);
                 }
@@ -570,52 +583,59 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         const finalParts = [];
+        // Final pass to ensure all parts are within MAX_CHARS_PER_PART, handling long chunks by character if necessary
         parts.forEach(part => {
             if (part.length <= MAX_CHARS_PER_PART) {
                 finalParts.push(part);
             } else {
                 let remaining = part;
                 while (remaining.length > 0) {
-                    let splitPoint = MAX_CHARS_PER_PART;
+                    let splitPoint = MAX_CHARS_PER_PART; // Default split point
 
                     let potentialSplitSegment = remaining.substring(0, MAX_CHARS_PER_PART);
                     let bestNaturalBreak = -1;
+                    // Define a safe range within the limit to look for natural breaks
                     const breakSearchRangeStart = MAX_CHARS_PER_PART - MIN_CHARS_FOR_NEW_SPLIT;
 
                     const linesInSegment = potentialSplitSegment.split('\n');
-                    let currentLength = potentialSplitSegment.length;
+                    let currentLength = potentialSplitSegment.length; // Track length from end of segment
+                    // Iterate backwards to find a good breaking point (e.g., end of sentence, empty line)
                     for (let i = linesInSegment.length - 1; i >= 0; i--) {
                         const currentLine = linesInSegment[i];
-                        const lineStartIndex = currentLength - currentLine.length - (i > 0 ? 1 : 0);
+                        const lineStartIndex = currentLength - currentLine.length - (i > 0 ? 1 : 0); // Start index of current line in segment
 
                         if (lineStartIndex >= breakSearchRangeStart) {
                             if (strategy === 'auto' && isLikelyMarkdownBlockLine(currentLine)) {
+                                // For Markdown blocks, try to break *before* the block or at previous natural break
                                 const prevNewlineIndex = potentialSplitSegment.substring(0, lineStartIndex).lastIndexOf('\n');
                                 if (prevNewlineIndex !== -1 && prevNewlineIndex >= breakSearchRangeStart) {
                                     bestNaturalBreak = prevNewlineIndex;
                                     break;
                                 }
                             } else {
+                                // Look for sentence endings or non-empty lines as natural breaks
                                 if (currentLine.endsWith('.') || currentLine.endsWith('?') || currentLine.endsWith('!')) {
-                                    bestNaturalBreak = currentLength;
+                                    bestNaturalBreak = currentLength; // Break after sentence
                                     break;
                                 }
                                 if (currentLine.trim().length > 0) {
-                                    bestNaturalBreak = currentLength;
+                                    bestNaturalBreak = currentLength; // Break after a significant line
                                     break;
                                 }
                             }
                         }
-                        currentLength -= (currentLine.length + (i > 0 ? 1 : 0));
+                        currentLength -= (currentLine.length + (i > 0 ? 1 : 0)); // Decrement length for next iteration
                     }
 
                     if (bestNaturalBreak !== -1) {
-                        splitPoint = bestNaturalBreak + 1;
+                        splitPoint = bestNaturalBreak + 1; // Adjust to be inclusive of the break character
                     } else {
+                        // Fallback: if no natural break found in the safe range, try last newline
                         let fallbackNewline = potentialSplitSegment.lastIndexOf('\n');
                         if (fallbackNewline !== -1) {
                             splitPoint = fallbackNewline + 1;
                         } else {
+                            // Absolute fallback: split exactly at MAX_CHARS_PER_PART or remaining length
                             splitPoint = Math.min(MAX_CHARS_PER_PART, remaining.length);
                         }
                     }
@@ -626,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        return finalParts.filter(p => p.length > 0);
+        return finalParts.filter(p => p.length > 0); // Filter out any empty parts
     }
 
     /**
@@ -643,11 +663,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const partSuffix = partSuffixInput.value;
 
         if (parts.length === 0) {
-            disableOutputButtons();
+            copyAllButton.disabled = true;
+            copyAllButton.classList.add('opacity-50', 'cursor-not-allowed');
+            exportTextButton.disabled = true;
+            exportTextButton.classList.add('opacity-50', 'cursor-not-allowed');
+            exportJsonButton.disabled = true;
+            exportJsonButton.classList.add('opacity-50', 'cursor-not-allowed');
+            clearOutputOnlyButton.disabled = true;
+            clearOutputOnlyButton.classList.add('opacity-50', 'cursor-not-allowed');
             return;
         }
 
-        enableOutputButtons();
+        copyAllButton.disabled = false;
+        copyAllButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        exportTextButton.disabled = false;
+        exportTextButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        exportJsonButton.disabled = false;
+        exportJsonButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        clearOutputOnlyButton.disabled = false;
+        clearOutputOnlyButton.classList.remove('opacity-50', 'cursor-not-allowed');
+
 
         parts.forEach((partContent, index) => {
             const partBox = document.createElement('div');
@@ -735,7 +770,9 @@ document.addEventListener('DOMContentLoaded', () => {
             currentParts.splice(indexToDelete, 1); // Remove the part
             const rebuiltPrompt = currentParts.join('\n\n');
             promptInput.value = rebuiltPrompt;
-            updateCounts(); // Update all counts
+            updateCharCount();
+            updateWordCount();
+            updateTokenCount();
             showMessage(`بخش ${indexToDelete + 1} حذف شد.`, 'success');
             triggerAutoSplit(); // Re-split and re-render the output
             saveCurrentPromptState(); // Save to history after deletion
@@ -766,19 +803,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Only clear aiPromptInput if it's a new part or a different part
         if (partContent !== currentPartOriginalContent) {
-            aiPromptInput.value = ''; // Clear previous custom AI prompt
+            aiPromptInput.value = '';
         }
         currentPartOriginalContent = partContent;
         currentPartOriginalIndex = partIndex;
-        aiResponseTextarea.value = ''; // Clear AI response textarea
-        aiLoadingSpinner.classList.add('hidden'); // Hide spinner initially
-        aiResponseTextarea.classList.remove('hidden'); // Show textarea
+        aiResponseTextarea.value = '';
+        aiLoadingSpinner.classList.add('hidden');
+        aiResponseTextarea.classList.remove('hidden');
         aiRefiningPartInfo.textContent = `(در حال اصلاح بخش ${partIndex + 1})`; // Update part info
         aiRefiningPartInfo.classList.remove('hidden');
         aiResponseModal.classList.add('open');
-        aiResponseModal.setAttribute('aria-modal', 'true');
-        aiResponseModal.setAttribute('role', 'dialog');
-        aiPromptInput.focus(); // Focus on AI prompt input for immediate typing
     }
 
     /**
@@ -804,7 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
             const payload = { contents: chatHistory };
-            const apiKey = ""; // Canvas will provide this dynamically
+            const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
             
             const response = await fetch(apiUrl, {
@@ -823,7 +857,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showMessage(`پاسخ هوش مصنوعی دریافت شد.`, 'success');
             } else {
                 aiResponseTextarea.value = 'پاسخی از هوش مصنوعی دریافت نشد. لطفاً دوباره تلاش کنید.';
-                showMessage('خطا در دریافت پاسخ هوش مصنوعی: پاسخ خالی یا نامعتبر.', 'error');
+                showMessage('خطا در دریافت پاسخ هوش مصنوعی.', 'error');
             }
 
         } catch (error) {
@@ -843,8 +877,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Event listeners for AI modal buttons
     closeAiModalButton.addEventListener('click', () => {
         aiResponseModal.classList.remove('open');
-        aiResponseModal.removeAttribute('aria-modal');
-        aiResponseModal.removeAttribute('role');
         aiRefiningPartInfo.classList.add('hidden'); // Hide part info
         if (currentlyHighlightedPartElement) {
             currentlyHighlightedPartElement.classList.remove('active-ai-edit');
@@ -974,7 +1006,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             showMessage('پاسخ هوش مصنوعی در پرامپت اصلی درج شد.', 'success');
             
-            updateCounts(); // Update all counts after insertion
+            updateCharCount();
+            updateWordCount();
+            updateTokenCount(); // Update token count after insert
             triggerAutoSplit();
             closeAiModalButton.click(); // Close AI modal and remove highlight
             saveCurrentPromptState(); // Save state after AI insertion
@@ -1005,7 +1039,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     const bounding = targetItem.getBoundingClientRect();
                     const offset = bounding.y + (bounding.height / 2);
 
-                    // Determine if dragging above or below the center of the target item
                     if (e.clientY - offset > 0) {
                         targetItem.parentNode.insertBefore(draggedItem, targetItem.nextSibling);
                     } else {
@@ -1015,30 +1048,27 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             part.addEventListener('dragleave', (e) => {
-                // No specific action needed
+                // No specific action needed as styling is handled by CSS (drag-over)
             });
 
             part.addEventListener('dragend', (e) => {
-                if (draggedItem) { // Ensure draggedItem is not null
-                    draggedItem.classList.remove('dragging');
-                }
+                draggedItem.classList.remove('dragging');
                 draggedItem = null;
                 rebuildPromptFromReorderedParts();
                 // After reordering, if the AI modal was open for a part, reset its original index
-                if (currentPartOriginalContent && currentlyHighlightedPartElement) {
+                if (currentPartOriginalContent && currentPartOriginalIndex !== -1) {
                     const reorderedElements = Array.from(outputContainer.querySelectorAll('.prompt-part-box'));
-                    // Find the newly positioned element that contains the original content
-                    const newHighlightedElement = reorderedElements.find(el => el.dataset.originalContent === currentPartOriginalContent);
-                    if (newHighlightedElement) {
-                        currentPartOriginalIndex = Array.from(outputContainer.children).indexOf(newHighlightedElement);
-                        currentlyHighlightedPartElement = newHighlightedElement; // Update reference
-                        currentlyHighlightedPartElement.classList.add('active-ai-edit'); // Re-apply highlight
+                    const newIndex = reorderedElements.findIndex(el => el.dataset.originalContent === currentPartOriginalContent);
+                    if (newIndex !== -1) {
+                        currentPartOriginalIndex = newIndex;
                     } else {
-                        // If the original part is somehow not found after reordering (e.g., deleted), reset.
+                        // If the original part is somehow not found after reordering, reset.
                         currentPartOriginalContent = null;
                         currentPartOriginalIndex = -1;
-                        currentlyHighlightedPartElement.classList.remove('active-ai-edit');
-                        currentlyHighlightedPartElement = null;
+                        if (currentlyHighlightedPartElement) {
+                            currentlyHighlightedPartElement.classList.remove('active-ai-edit');
+                            currentlyHighlightedPartElement = null;
+                        }
                     }
                 }
             });
@@ -1056,9 +1086,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const rebuiltPrompt = originalContents.join('\n\n');
 
         promptInput.value = rebuiltPrompt;
-        updateCounts(); // Update all counts after reorder
-        showMessage('ترتیب بخش‌ها تغییر کرد. می‌توانید پرامپت اصلی را کپی کنید یا دوباره تقسیم کنید.', 'info');
-        triggerAutoSplit(); // Re-render output with updated part numbers and order
+        updateCharCount();
+        updateWordCount();
+        updateTokenCount(); // Update token count after reorder
+        showMessage('ترتیب بخش‌ها تغییر کرد. می‌توانید پرامپپت اصلی را کپی کنید یا دوباره تقسیم کنید.', 'info');
+        triggerAutoSplit();
         saveCurrentPromptState(); // Save to history after reordering
     }
 
@@ -1074,7 +1106,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveCurrentPromptState() {
         const currentContent = promptInput.value.trim();
         // Prevent saving if current content is identical to the latest history entry OR if content is empty and history already has an empty entry
-        if (promptHistory.length > 0 && currentContent === promptHistory[0].content && currentContent === '') {
+        if (promptHistory.length > 0 && currentContent === promptHistory[0].content) {
             return;
         }
         promptHistory.unshift({ content: currentContent, timestamp: new Date() });
@@ -1100,7 +1132,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error('Error loading prompt history from localStorage:', e);
-            showMessage('خطا در بارگذاری تاریخچه پرامپت از حافظه محلی.', 'error');
             promptHistory = []; // Clear history on error
         }
     }
@@ -1143,11 +1174,12 @@ document.addEventListener('DOMContentLoaded', () => {
             historyItem.classList.add('flex-grow', 'block', 'px-2', 'py-1', 'text-sm', 'text-gray-700', 'dark:text-gray-200', 'truncate');
             historyItem.textContent = `${entry.content.substring(0, 40)}... (${timeAgo})`;
             historyItem.title = `بازگشت به: ${entry.content}\nذخیره شده: ${entry.timestamp.toLocaleString()}`;
-            historyItem.setAttribute('aria-label', `Load prompt from history: ${entry.content.substring(0, 40)}`);
             historyItem.addEventListener('click', (e) => {
                 e.preventDefault();
                 promptInput.value = entry.content;
-                updateCounts(); // Update all counts
+                updateCharCount();
+                updateWordCount();
+                updateTokenCount();
                 showMessage(`پرامپت به نسخه قبلی بازگردانده شد (${timeAgo}).`, 'info');
                 promptHistoryDropdownMenu.classList.add('hidden');
                 triggerAutoSplit();
@@ -1160,7 +1192,6 @@ document.addEventListener('DOMContentLoaded', () => {
             deleteButton.classList.add('delete-prompt-btn', 'bg-red-500', 'hover:bg-red-600', 'text-white', 'p-1', 'rounded', 'text-xs', 'ml-2');
             deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
             deleteButton.title = `حذف این مورد از تاریخچه`;
-            deleteButton.setAttribute('aria-label', `Delete this history entry: ${entry.content.substring(0, 20)}`);
             deleteButton.addEventListener('click', (e) => {
                 e.stopPropagation();
                 showConfirmationModal('آیا مطمئنید می‌خواهید این مورد را از تاریخچه حذف کنید؟', () => {
@@ -1179,13 +1210,9 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {number} indexToDelete - The index of the item to delete.
      */
     function deleteHistoryItem(indexToDelete) {
-        if (indexToDelete >= 0 && indexToDelete < promptHistory.length) {
-            promptHistory.splice(indexToDelete, 1);
-            savePromptHistoryToLocalStorage();
-            renderPromptHistoryList();
-        } else {
-            showMessage('خطا: آیتم تاریخچه نامعتبر برای حذف.', 'error');
-        }
+        promptHistory.splice(indexToDelete, 1);
+        savePromptHistoryToLocalStorage();
+        renderPromptHistoryList();
     }
 
     /**
@@ -1254,13 +1281,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const savedContent = localStorage.getItem('promptPartoAutoSave');
             if (savedContent && promptInput.value.trim() === '') { // Only load if input is empty
                 promptInput.value = savedContent;
-                updateCounts(); // Update all counts
+                updateCharCount();
+                updateWordCount();
+                updateTokenCount();
                 showMessage('پرامپت ذخیره شده خودکار بارگذاری شد.', 'info');
                 // Do not save to history immediately, let the user's first input do that.
             }
         } catch (e) {
             console.error('Error loading auto-saved prompt:', e);
-            showMessage('خطا در بارگذاری پرامپت ذخیره شده خودکار.', 'error');
         }
     }
 
@@ -1275,16 +1303,11 @@ document.addEventListener('DOMContentLoaded', () => {
             prompt: promptInput.value,
             settings: settings // 'settings' object holds all current config
         };
-        try {
-            const encodedData = btoa(JSON.stringify(dataToShare));
-            const shareUrl = `${window.location.origin}${window.location.pathname}?promptData=${encodedData}`;
-            
-            copyTextToClipboard(shareUrl, 'لینک اشتراک‌گذاری', shareButton);
-            showMessage('لینک اشتراک‌گذاری کپی شد!', 'success');
-        } catch (e) {
-            console.error('Error generating shareable URL:', e);
-            showMessage('خطا در تولید لینک اشتراک‌گذاری. پرامپت شما ممکن است خیلی بزرگ باشد.', 'error');
-        }
+        const encodedData = btoa(JSON.stringify(dataToShare));
+        const shareUrl = `${window.location.origin}${window.location.pathname}?promptData=${encodedData}`;
+        
+        copyTextToClipboard(shareUrl, 'لینک اشتراک‌گذاری', shareButton);
+        showMessage('لینک اشتراک‌گذاری کپی شد!', 'success');
     }
 
     /**
@@ -1300,7 +1323,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const decodedData = JSON.parse(atob(encodedData));
                 if (decodedData.prompt !== undefined) {
                     promptInput.value = decodedData.prompt;
-                    updateCounts(); // Update all counts
+                    updateCharCount();
+                    updateWordCount();
+                    updateTokenCount();
                     promptHistory = []; // Clear history if loading from URL to avoid confusion
                     renderPromptHistoryList();
                 }
@@ -1322,9 +1347,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 showMessage('پرامپت و تنظیمات از لینک بارگذاری شد!', 'info');
                 history.replaceState(null, '', window.location.pathname); // Clean up URL
                 triggerAutoSplit();
-            } catch (e) {
+            }
+            catch (e) {
                 console.error('Error decoding/applying shared URL data:', e);
-                showMessage('خطا در بارگذاری اطلاعات از لینک اشتراک‌گذاری. فرمت داده‌ها نامعتبر است.', 'error');
+                showMessage('خطا در بارگذاری اطلاعات از لینک اشتراک‌گذاری.', 'error');
             }
         }
     }
@@ -1334,21 +1360,18 @@ document.addEventListener('DOMContentLoaded', () => {
     dragDropZone.addEventListener('dragover', (e) => {
         e.preventDefault(); // Prevent default to allow drop
         dragDropZone.classList.add('drag-over');
-        dragDropOverlay.classList.add('active'); // Activate overlay
     });
 
     dragDropZone.addEventListener('dragleave', (e) => {
         // Only remove drag-over if leaving the main drop zone, not just child elements
         if (!dragDropZone.contains(e.relatedTarget)) {
             dragDropZone.classList.remove('drag-over');
-            dragDropOverlay.classList.remove('active'); // Deactivate overlay
         }
     });
 
     dragDropZone.addEventListener('drop', (e) => {
         e.preventDefault(); // Prevent default file open
         dragDropZone.classList.remove('drag-over');
-        dragDropOverlay.classList.remove('active'); // Deactivate overlay
 
         const files = e.dataTransfer.files;
         if (files.length > 0) {
@@ -1357,7 +1380,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     promptInput.value = event.target.result;
-                    updateCounts(); // Update all counts
+                    updateCharCount();
+                    updateWordCount();
+                    updateTokenCount();
                     triggerAutoSplit();
                     saveCurrentPromptState();
                     saveAutoPrompt();
@@ -1382,7 +1407,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     promptInput.value = event.target.result;
-                    updateCounts(); // Update all counts
+                    updateCharCount();
+                    updateWordCount();
+                    updateTokenCount();
                     triggerAutoSplit();
                     saveCurrentPromptState();
                     saveAutoPrompt();
@@ -1396,7 +1423,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 showMessage('لطفاً فقط فایل‌های متنی (.txt) را انتخاب کنید.', 'error');
             }
         }
-        fileInput.value = ''; // Clear the file input for next time
     });
     
     // Allow clicking the overlay to open file dialog (for accessibility/fallback)
@@ -1409,30 +1435,22 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Manual split button click
     splitButton.addEventListener('click', () => {
-        updateMaxCharsPerPart(); // Ensure latest settings are used
+        updateMaxCharsPerPart();
         const prompt = promptInput.value;
         const strategy = splitStrategySelect.value;
         const customDelim = customDelimiterInput.value;
         const regexDelim = regexDelimiterInput.value;
         const includeDelimiters = includeDelimitersInOutputCheckbox.checked;
 
-        if (prompt.trim() === '') {
-            showMessage('لطفاً متنی برای تقسیم وارد کنید.', 'info');
-            return;
-        }
-
         splitButton.disabled = true;
         splitButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> در حال تقسیم...`;
         
-        // Use a small timeout to allow UI update before heavy computation
-        setTimeout(() => {
-            const parts = splitPrompt(prompt, strategy, customDelim, regexDelim, includeDelimiters);
-            renderOutput(parts);
-            splitButton.disabled = false;
-            splitButton.innerHTML = `<i class="fas fa-cut mr-2"></i> تقسیم پرامپت`;
-            saveCurrentPromptState();
-            showMessage(`پرامپت به ${parts.length} بخش تقسیم شد.`, 'success');
-        }, 50);
+        const parts = splitPrompt(prompt, strategy, customDelim, regexDelim, includeDelimiters);
+        renderOutput(parts);
+        splitButton.disabled = false;
+        splitButton.innerHTML = `<i class="fas fa-cut mr-2"></i> تقسیم پرامپت`;
+
+        saveCurrentPromptState();
     });
 
     copyAllButton.addEventListener('click', () => {
@@ -1456,7 +1474,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             if (data && data.examplePrompt) {
                 promptInput.value = data.examplePrompt;
-                updateCounts(); // Update all counts
+                updateCharCount();
+                updateWordCount();
+                updateTokenCount();
                 setTimeout(() => {
                     triggerAutoSplit();
                     saveCurrentPromptState(); // Save example as first history entry
@@ -1467,7 +1487,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Error loading example prompt:', error);
-            showMessage('خطا در بارگذاری فایل مثال. لطفاً دوباره تلاش کنید.', 'error');
+            showMessage('خطا در بارگذاری فایل مثال.', 'error');
         } finally {
             loadExampleButton.disabled = false;
             loadExampleButton.innerHTML = `<i class="fas fa-file-alt mr-2"></i> بارگذاری مثال`;
@@ -1482,33 +1502,39 @@ document.addEventListener('DOMContentLoaded', () => {
     exportJsonButton.addEventListener('click', exportJsonFile);
     savePromptButton.addEventListener('click', saveCurrentPrompt);
     shareButton.addEventListener('click', generateShareableUrl);
-    clearHistoryButton.addEventListener('click', clearPromptHistory);
+    clearHistoryButton.addEventListener('click', clearPromptHistory); // New listener for clear history
 
-    loadPromptDropdownToggle.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent document click from closing it immediately
+    loadPromptDropdownToggle.addEventListener('click', () => {
         loadPromptDropdownMenu.classList.toggle('hidden');
         if (!loadPromptDropdownMenu.classList.contains('hidden')) {
             renderSavedPromptsList();
         }
+        // Toggle aria-expanded
+        const isExpanded = loadPromptDropdownToggle.getAttribute('aria-expanded') === 'true';
+        loadPromptDropdownToggle.setAttribute('aria-expanded', !isExpanded);
     });
 
-    promptHistoryDropdownToggle.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent document click from closing it immediately
+    promptHistoryDropdownToggle.addEventListener('click', () => {
         promptHistoryDropdownMenu.classList.toggle('hidden');
         if (!promptHistoryDropdownMenu.classList.contains('hidden')) {
             renderPromptHistoryList();
         }
+        // Toggle aria-expanded
+        const isExpanded = promptHistoryDropdownToggle.getAttribute('aria-expanded') === 'true';
+        promptHistoryDropdownToggle.setAttribute('aria-expanded', !isExpanded);
     });
 
     // Close dropdowns if clicked outside
     document.addEventListener('click', (event) => {
         if (!loadPromptDropdownToggle.contains(event.target) && !loadPromptDropdownMenu.contains(event.target)) {
             loadPromptDropdownMenu.classList.add('hidden');
+            loadPromptDropdownToggle.setAttribute('aria-expanded', 'false');
         }
-        if (!promptHistoryDropdownToggle.contains(event.target) && !promptHistoryDropdownMenu.contains(event.target) && !confirmModal.contains(event.target) && !aiResponseModal.contains(event.target)) {
-            // Only close history dropdown if not interacting with the confirmation or AI modals
+        if (!promptHistoryDropdownToggle.contains(event.target) && !promptHistoryDropdownMenu.contains(event.target) && !confirmModal.contains(event.target)) {
             promptHistoryDropdownMenu.classList.add('hidden');
+            promptHistoryDropdownToggle.setAttribute('aria-expanded', 'false');
         }
+        // Don't close confirmation modal if clicking outside it but within it
     });
 
 
@@ -1558,7 +1584,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const DEBOUNCE_DELAY_AUTO_SPLIT = 500;
 
     promptInput.addEventListener('input', () => {
-        updateCounts(); // Update all counts immediately on input
+        updateCharCount();
+        updateWordCount();
+        updateTokenCount();
         clearTimeout(debounceTimerAutoSplit);
         debounceTimerAutoSplit = setTimeout(() => {
             triggerAutoSplit();
@@ -1586,7 +1614,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 splitButton.innerHTML = `<i class="fas fa-cut mr-2"></i> تقسیم پرامپت`;
             }, 50);
         } else {
-            clearOutputOnly(); // Clear output if prompt input is empty
+            clearOutputOnly();
         }
     }
 
@@ -1604,7 +1632,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return stored ? JSON.parse(stored) : [];
         } catch (e) {
             console.error('Error parsing saved prompts from localStorage:', e);
-            showMessage('خطا در بارگذاری پرامپت‌های ذخیره‌شده از حافظه محلی.', 'error');
             return [];
         }
     }
@@ -1634,28 +1661,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const promptName = prompt('لطفاً یک نام برای پرامپت خود وارد کنید:'); // Using browser prompt for simplicity
+        const promptName = prompt('لطفاً یک نام برای پرامپت خود وارد کنید:'); // Keep prompt for name input
         if (!promptName || promptName.trim() === '') {
             showMessage('نام پرامپت نمی‌تواند خالی باشد.', 'error');
             return;
         }
 
-        const trimmedPromptName = promptName.trim();
         const savedPrompts = getSavedPrompts();
-        const existingPromptIndex = savedPrompts.findIndex(p => p.name === trimmedPromptName);
+        const existingPromptIndex = savedPrompts.findIndex(p => p.name === promptName.trim());
 
         if (existingPromptIndex !== -1) {
-            showConfirmationModal(`پرامپتی با نام "${trimmedPromptName}" از قبل وجود دارد. آیا می‌خواهید آن را بازنویسی کنید؟`, () => {
+            showConfirmationModal(`پرامپتی با نام "${promptName.trim()}" از قبل وجود دارد. آیا می‌خواهید آن را بازنویسی کنید؟`, () => {
                 savedPrompts[existingPromptIndex].content = promptContent;
                 savePromptsToLocalStorage(savedPrompts);
                 renderSavedPromptsList();
-                showMessage(`پرامپت "${trimmedPromptName}" با موفقیت بازنویسی شد.`, 'success');
+                showMessage(`پرامپت "${promptName.trim()}" با موفقیت بازنویسی شد.`, 'success');
             }, 'بازنویسی پرامپت');
         } else {
-            savedPrompts.push({ name: trimmedPromptName, content: promptContent });
+            savedPrompts.push({ name: promptName.trim(), content: promptContent });
             savePromptsToLocalStorage(savedPrompts);
             renderSavedPromptsList();
-            showMessage(`پرامپت "${trimmedPromptName}" با موفقیت ذخیره شد.`, 'success');
+            showMessage(`پرامپت "${promptName.trim()}" با موفقیت ذخیره شد.`, 'success');
         }
     }
 
@@ -1682,25 +1708,26 @@ document.addEventListener('DOMContentLoaded', () => {
             loadLink.classList.add('flex-grow', 'text-gray-700', 'dark:text-gray-200', 'block', 'px-2', 'py-1', 'text-sm', 'truncate');
             loadLink.textContent = prompt.name;
             loadLink.title = prompt.name;
-            loadLink.setAttribute('aria-label', `Load saved prompt: ${prompt.name}`);
             loadLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 promptInput.value = prompt.content;
-                updateCounts(); // Update all counts
+                updateCharCount();
+                updateWordCount();
+                updateTokenCount(); // Update token count
                 showMessage(`پرامپت "${prompt.name}" بارگذاری شد.`, 'success');
                 loadPromptDropdownMenu.classList.add('hidden');
+                loadPromptDropdownToggle.setAttribute('aria-expanded', 'false'); // Close and update aria
                 triggerAutoSplit();
                 saveCurrentPromptState(); // Save state after loading from saved prompts
             });
             div.appendChild(loadLink);
 
             const deleteButton = document.createElement('button');
-            deleteButton.classList.add('delete-prompt-btn', 'bg-red-500', 'hover:bg-red-600', 'text-white', 'p-1', 'rounded', 'text-xs', 'ml-2');
+            deleteButton.classList.add('delete-prompt-btn', 'bg-red-500', 'hover:bg-red-600', 'text-white', 'p-1', 'rounded', 'text-xs', 'mr-2');
             deleteButton.innerHTML = '<i class="fas fa-trash"></i>';
             deleteButton.title = `حذف "${prompt.name}"`;
-            deleteButton.setAttribute('aria-label', `Delete saved prompt: ${prompt.name}`);
             deleteButton.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevent the parent loadLink click
+                e.stopPropagation();
                 showConfirmationModal(`آیا مطمئنید می‌خواهید پرامپت "${prompt.name}" را حذف کنید؟`, () => {
                     deletePrompt(prompt.name);
                     showMessage(`پرامپت "${prompt.name}" حذف شد.`, 'success');
@@ -1737,21 +1764,16 @@ document.addEventListener('DOMContentLoaded', () => {
             savedPrompts: JSON.parse(localStorage.getItem('promptPartoSavedPrompts') || '[]'),
             promptHistory: JSON.parse(localStorage.getItem('promptPartoHistory') || '[]')
         };
-        try {
-            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'promptparto_data.json';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            showMessage('تمام داده‌های شما با موفقیت خروجی گرفته شد!', 'success');
-        } catch (e) {
-            console.error('Error exporting data:', e);
-            showMessage('خطا در خروجی گرفتن از تمام داده‌ها. حجم داده‌ها ممکن است خیلی زیاد باشد.', 'error');
-        }
+        const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'promptparto_data.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showMessage('تمام داده‌های شما با موفقیت خروجی گرفته شد!', 'success');
     }
 
     /**
@@ -1774,23 +1796,15 @@ document.addEventListener('DOMContentLoaded', () => {
                         showConfirmationModal(
                             'وارد کردن داده‌ها، داده‌های موجود را بازنویسی خواهد کرد. آیا مطمئنید؟',
                             () => { // On Confirm
-                                // Validate imported data structure before saving
-                                if (importedData.settings && typeof importedData.settings === 'object') {
+                                if (importedData.settings) {
                                     localStorage.setItem('promptPartoSettings', JSON.stringify(importedData.settings));
-                                } else {
-                                    showMessage('داده‌های تنظیمات نامعتبر هستند. نادیده گرفته شد.', 'error');
                                 }
-                                if (importedData.savedPrompts && Array.isArray(importedData.savedPrompts)) {
+                                if (importedData.savedPrompts) {
                                     localStorage.setItem('promptPartoSavedPrompts', JSON.stringify(importedData.savedPrompts));
-                                } else {
-                                    showMessage('داده‌های پرامپت‌های ذخیره‌شده نامعتبر هستند. نادیده گرفته شد.', 'error');
                                 }
-                                if (importedData.promptHistory && Array.isArray(importedData.promptHistory)) {
+                                if (importedData.promptHistory) {
                                     localStorage.setItem('promptPartoHistory', JSON.stringify(importedData.promptHistory));
-                                } else {
-                                    showMessage('داده‌های تاریخچه پرامپت نامعتبر هستند. نادیده گرفته شد.', 'error');
                                 }
-                                
                                 // Reload everything to reflect imported data
                                 loadSettings();
                                 loadAutoPrompt();
@@ -1845,8 +1859,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'c':
                     if (e.shiftKey) {
                         e.preventDefault();
-                        // Trigger the clearAllButton click which will show the confirmation modal
-                        clearAllButton.click();
+                        clearAllButton.click(); // This will trigger the confirmation modal
                     }
                     break;
                 case 'o':
@@ -1861,18 +1874,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.preventDefault();
                     promptHistoryDropdownToggle.click();
                     break;
-                case 'i': // Ctrl+I for Import Data
-                    e.preventDefault();
-                    importAllDataButton.click();
-                    break;
-                case 'x': // Ctrl+X for Export Data
-                    e.preventDefault();
-                    exportAllDataButton.click();
-                    break;
-                case 'p': // Ctrl+P for Split Prompt
-                    e.preventDefault();
-                    splitButton.click();
-                    break;
             }
         }
     });
@@ -1885,13 +1886,22 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPromptHistoryFromLocalStorage(); // Load history from local storage
     startAutoSave(); // Start auto-save interval
 
-    updateCounts(); // Initial update of all counts
+    updateCharCount();
+    updateWordCount();
+    updateTokenCount(); // Initial update of token count
 
     renderSavedPromptsList();
     renderPromptHistoryList(); // Render history on load
 
     // Disable buttons initially (will be enabled by renderOutput if parts exist)
-    disableOutputButtons();
+    copyAllButton.disabled = true;
+    copyAllButton.classList.add('opacity-50', 'cursor-not-allowed');
+    exportTextButton.disabled = true;
+    exportTextButton.classList.add('opacity-50', 'cursor-not-allowed');
+    exportJsonButton.disabled = true;
+    exportJsonButton.classList.add('opacity-50', 'cursor-not-allowed');
+    clearOutputOnlyButton.disabled = true;
+    clearOutputOnlyButton.classList.add('opacity-50', 'cursor-not-allowed');
 
     // Add event listeners for new data management buttons
     exportAllDataButton.addEventListener('click', exportAllUserData);
