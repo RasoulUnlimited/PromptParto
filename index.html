@@ -76,6 +76,25 @@
                     >
                         <i class="fas fa-copy mr-2"></i> کپی همه
                     </button>
+                    <!-- New: Undo/Redo Buttons -->
+                    <div class="flex gap-3">
+                        <button
+                            id="undoButton"
+                            class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base disabled:opacity-50 disabled:cursor-not-allowed flex-grow"
+                            aria-label="Undo"
+                            disabled
+                        >
+                            <i class="fas fa-undo mr-2"></i> واگرد
+                        </button>
+                        <button
+                            id="redoButton"
+                            class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base disabled:opacity-50 disabled:cursor-not-allowed flex-grow"
+                            aria-label="Redo"
+                            disabled
+                        >
+                            <i class="fas fa-redo mr-2"></i> بازگردانی
+                        </button>
+                    </div>
                     <button
                         id="loadExampleButton"
                         class="bg-gray-400 hover:bg-gray-500 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base disabled:opacity-50 disabled:cursor-not-allowed"
@@ -190,6 +209,14 @@
                         <i class="fas fa-file-alt mr-2"></i> خروجی متنی (.txt)
                     </button>
                     <button
+                        id="exportMarkdownButton"
+                        class="bg-teal-500 hover:bg-teal-600 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                        aria-label="Export All Parts to Markdown File"
+                        disabled
+                    >
+                        <i class="fab fa-markdown mr-2"></i> خروجی مارک‌داون (.md)
+                    </button>
+                    <button
                         id="exportJsonButton"
                         class="bg-teal-600 hover:bg-teal-700 text-white font-medium py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center text-base disabled:opacity-50 disabled:cursor-not-allowed"
                         aria-label="Export All Parts to JSON File"
@@ -224,9 +251,9 @@
                     </div>
                 </div>
 
-                <!-- New: History and Share Buttons -->
+                <!-- New: History, Share and Prompt Templates Buttons -->
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
-                     <div class="relative inline-block text-left z-10">
+                   <div class="relative inline-block text-left z-10">
                         <button
                             id="promptHistoryDropdownToggle"
                             class="inline-flex justify-center w-full rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200"
@@ -260,6 +287,25 @@
                     >
                         <i class="fas fa-share-alt mr-2"></i> اشتراک‌گذاری
                     </button>
+                    <!-- New: Prompt Templates Dropdown -->
+                    <div class="relative inline-block text-left z-10">
+                        <button
+                            id="templateDropdownToggle"
+                            class="inline-flex justify-center w-full rounded-lg border border-gray-300 dark:border-gray-600 shadow-sm px-6 py-3 bg-white dark:bg-gray-700 text-base font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-200"
+                            aria-haspopup="true"
+                            aria-expanded="false"
+                            aria-label="Load Prompt Templates"
+                        >
+                            <i class="fas fa-file-contract mr-2"></i> الگوهای پرامپت
+                            <i class="fas fa-chevron-down ml-2 -mr-1"></i>
+                        </button>
+                        <div id="templateDropdownMenu" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none hidden max-h-60 overflow-y-auto" role="menu" aria-orientation="vertical" aria-labelledby="templateDropdownToggle">
+                            <div class="py-1" role="none" id="templateList">
+                                <!-- Templates will be injected here -->
+                                <p class="text-center text-gray-500 dark:text-gray-400 p-2">الگویی وجود ندارد.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- New: Global Data Management Buttons -->
@@ -343,6 +389,50 @@
                         <i class="fas fa-paper-plane ml-2"></i> ارسال به هوش مصنوعی
                     </button>
                 </div>
+                
+                <!-- New: AI Advanced Settings -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="flex items-center gap-2">
+                        <label for="aiTemperature" class="text-gray-700 dark:text-gray-300">دما (خلاقیت):</label>
+                        <input
+                            type="number"
+                            id="aiTemperature"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value="0.7"
+                            class="w-20 p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 shadow-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                            aria-label="AI Temperature (creativity)"
+                            title="مقدار بالاتر برای خروجی خلاقانه‌تر. بین 0 تا 1."
+                        >
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label for="aiTopP" class="text-gray-700 dark:text-gray-300">تاپ-پی (تنوع):</label>
+                        <input
+                            type="number"
+                            id="aiTopP"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value="0.9"
+                            class="w-20 p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 shadow-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                            aria-label="AI Top-P (diversity)"
+                            title="مقدار بالاتر برای تنوع بیشتر در خروجی. بین 0 تا 1."
+                        >
+                    </div>
+                    <div class="flex items-center gap-2 col-span-1 md:col-span-2">
+                        <label for="aiResponseCharLimit" class="text-gray-700 dark:text-gray-300">محدودیت کاراکتر پاسخ هوش مصنوعی (اختیاری):</label>
+                        <input
+                            type="number"
+                            id="aiResponseCharLimit"
+                            min="100"
+                            value="0"
+                            class="w-24 p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 shadow-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                            aria-label="AI Response Character Limit"
+                            title="حداکثر کاراکتر برای پاسخ هوش مصنوعی. 0 به معنای عدم محدودیت."
+                        >
+                    </div>
+                </div>
 
                 <div id="aiLoadingSpinner" class="flex justify-center items-center py-8 hidden">
                     <i class="fas fa-spinner fa-spin text-4xl text-blue-500"></i>
@@ -354,6 +444,22 @@
                     readonly
                     aria-label="AI Response"
                 ></textarea>
+                <!-- AI Response text area counts and bar (moved inside modal for better context) -->
+                <div class="flex justify-between text-sm mt-2">
+                    <p id="aiCharCount" class="text-gray-500 dark:text-gray-400 text-left">
+                        کاراکترها: 0
+                    </p>
+                    <p id="aiWordCount" class="text-gray-500 dark:text-gray-400 text-center">
+                        کلمات: 0
+                    </p>
+                    <p id="aiTokenCount" class="text-gray-500 dark:text-gray-400 text-right">
+                        توکن‌ها (تخمینی): 0
+                    </p>
+                </div>
+                <div class="char-limit-bar-container" id="aiResponseCharLimitBarContainer">
+                    <div class="char-limit-bar" id="aiResponseCharLimitBar"></div>
+                </div>
+
             </div>
             <div class="mt-4 flex justify-end gap-3">
                 <button
@@ -396,6 +502,32 @@
             <div class="flex justify-around gap-4">
                 <button id="cancelConfirmationButton" class="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg shadow-md transition duration-200 flex-grow">انصراف</button>
                 <button id="confirmActionButton" class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-6 rounded-lg shadow-md transition duration-200 flex-grow">تایید</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New: Generic Input Modal Structure -->
+    <div id="inputModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-2xl p-6 w-full max-w-sm transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+            <div class="flex justify-between items-center pb-3 border-b dark:border-gray-700">
+                <h3 id="inputModalTitle" class="text-xl font-semibold text-gray-900 dark:text-gray-100">عنوان مودال</h3>
+                <button type="button" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" id="inputModalClose" aria-label="Close Input Modal">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            <div class="mt-4 mb-4">
+                <p id="inputModalMessage" class="text-gray-700 dark:text-gray-300 mb-4"></p>
+                <input
+                    type="text"
+                    id="inputModalTextInput"
+                    class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 shadow-sm bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200"
+                    placeholder="متن ورودی"
+                    aria-label="Modal Input Text"
+                >
+            </div>
+            <div class="flex justify-around gap-4">
+                <button id="inputModalCancelButton" class="bg-gray-400 hover:bg-gray-500 text-white font-medium py-2 px-6 rounded-lg shadow-md transition duration-200 flex-grow">لغو</button>
+                <button id="inputModalConfirmButton" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg shadow-md transition duration-200 flex-grow">تایید</button>
             </div>
         </div>
     </div>

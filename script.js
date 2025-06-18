@@ -3,10 +3,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const promptInput = document.getElementById('promptInput');
     const splitButton = document.getElementById('splitButton');
     const copyAllButton = document.getElementById('copyAllButton');
+    const undoButton = document.getElementById('undoButton'); // New
+    const redoButton = document.getElementById('redoButton'); // New
     const loadExampleButton = document.getElementById('loadExampleButton');
     const clearAllButton = document.getElementById('clearAllButton');
     const clearOutputOnlyButton = document.getElementById('clearOutputOnlyButton');
     const exportTextButton = document.getElementById('exportTextButton');
+    const exportMarkdownButton = document.getElementById('exportMarkdownButton'); // New
     const exportJsonButton = document.getElementById('exportJsonButton');
     const outputContainer = document.getElementById('outputContainer');
     const messageBox = document.getElementById('messageBox');
@@ -35,13 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const promptHistoryDropdownToggle = document.getElementById('promptHistoryDropdownToggle');
     const promptHistoryDropdownMenu = document.getElementById('promptHistoryDropdownMenu');
     const historyList = document.getElementById('historyList');
-    const clearHistoryButton = document.getElementById('clearHistoryButton'); // New: Clear history button
+    const clearHistoryButton = document.getElementById('clearHistoryButton');
 
     // Share and Data Management buttons
     const shareButton = document.getElementById('shareButton');
     const exportAllDataButton = document.getElementById('exportAllDataButton');
     const importAllDataButton = document.getElementById('importAllDataButton');
     const importFileInput = document.getElementById('importFileInput');
+
+    // Prompt Templates elements
+    const templateDropdownToggle = document.getElementById('templateDropdownToggle'); // New
+    const templateDropdownMenu = document.getElementById('templateDropdownMenu'); // New
+    const templateList = document.getElementById('templateList'); // New
 
     // AI Modal elements
     const aiResponseModal = document.getElementById('aiResponseModal');
@@ -61,8 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const aiSendToAIButton = document.getElementById('aiSendToAIButton');
     const copyAiResponseButton = document.getElementById('copyAiResponseButton');
     const insertAiResponseButton = document.getElementById('insertAiResponseButton');
-    const aiRefiningPartInfo = document.getElementById('aiRefiningPartInfo'); // Keep for showing current part
-    const clearAiResponseButton = document.getElementById('clearAiResponseButton'); // New: Clear AI response button
+    const aiRefiningPartInfo = document.getElementById('aiRefiningPartInfo');
+    const clearAiResponseButton = document.getElementById('clearAiResponseButton');
+    const aiTemperatureInput = document.getElementById('aiTemperature'); // New
+    const aiTopPInput = document.getElementById('aiTopP'); // New
+    const aiResponseCharLimitInput = document.getElementById('aiResponseCharLimit'); // New
     
     // AI Response text area counts and bar
     const aiCharCountDisplay = document.getElementById('aiCharCount');
@@ -76,14 +87,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const dragDropOverlay = document.getElementById('dragDropOverlay');
     const fileInput = document.getElementById('fileInput');
 
-    // Custom Confirmation Modal elements (Renamed from previous iteration for clarity)
-    const confirmModal = document.getElementById('confirmationModal'); // Updated ID from HTML
-    const confirmTitle = document.getElementById('confirmationTitle'); // Updated ID from HTML
-    const confirmMessage = document.getElementById('confirmationMessage'); // Updated ID from HTML
-    const closeConfirmModalButton = document.getElementById('closeConfirmationModal'); // Updated ID from HTML
-    const cancelConfirmButton = document.getElementById('cancelConfirmationButton'); // Updated ID from HTML
-    const confirmActionButton = document.getElementById('confirmActionButton'); // Updated ID from HTML
-    let confirmationCallback = null; // Callback function for confirmation
+    // Custom Confirmation Modal elements
+    const confirmModal = document.getElementById('confirmationModal');
+    const confirmTitle = document.getElementById('confirmationTitle');
+    const confirmMessage = document.getElementById('confirmationMessage');
+    const closeConfirmModalButton = document.getElementById('closeConfirmationModal');
+    const cancelConfirmButton = document.getElementById('cancelConfirmationButton');
+    const confirmActionButton = document.getElementById('confirmActionButton');
+    let confirmationCallback = null;
+
+    // Generic Input Modal elements
+    const inputModal = document.getElementById('inputModal');
+    const inputModalTitle = document.getElementById('inputModalTitle');
+    const inputModalMessage = document.getElementById('inputModalMessage');
+    const inputModalTextInput = document.getElementById('inputModalTextInput');
+    const inputModalCloseButton = document.getElementById('inputModalClose'); // New: Close button for input modal
+    const inputModalCancelButton = document.getElementById('inputModalCancelButton');
+    const inputModalConfirmButton = document.getElementById('inputModalConfirmButton');
+    let inputModalCallback = null;
 
     // Default constants for splitting logic
     let MAX_CHARS_PER_PART = parseInt(maxCharsPerPartInput.value, 10) || 3800;
@@ -102,7 +123,10 @@ document.addEventListener('DOMContentLoaded', () => {
         partPrefix: '',
         partSuffix: '',
         includeDelimitersInOutput: false,
-        theme: 'light'
+        theme: 'light',
+        aiTemperature: parseFloat(aiTemperatureInput.value), // New
+        aiTopP: parseFloat(aiTopPInput.value), // New
+        aiResponseCharLimit: parseInt(aiResponseCharLimitInput.value, 10) // New
     };
 
     /**
@@ -126,6 +150,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 partPrefixInput.value = settings.partPrefix;
                 partSuffixInput.value = settings.partSuffix;
                 includeDelimitersInOutputCheckbox.checked = settings.includeDelimitersInOutput;
+                aiTemperatureInput.value = settings.aiTemperature; // New
+                aiTopPInput.value = settings.aiTopP; // New
+                aiResponseCharLimitInput.value = settings.aiResponseCharLimit; // New
                 applyTheme(settings.theme);
             } else {
                 const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -152,6 +179,9 @@ document.addEventListener('DOMContentLoaded', () => {
         settings.partSuffix = partSuffixInput.value;
         settings.includeDelimitersInOutput = includeDelimitersInOutputCheckbox.checked;
         settings.theme = document.body.classList.contains('dark') ? 'dark' : 'light';
+        settings.aiTemperature = parseFloat(aiTemperatureInput.value); // New
+        settings.aiTopP = parseFloat(aiTopPInput.value); // New
+        settings.aiResponseCharLimit = parseInt(aiResponseCharLimitInput.value, 10); // New
         try {
             localStorage.setItem('promptPartoSettings', JSON.stringify(settings));
         } catch (e) {
@@ -184,6 +214,89 @@ document.addEventListener('DOMContentLoaded', () => {
         applyTheme(newTheme);
         saveSettings();
     });
+
+    // --- Undo/Redo Logic ---
+    const PROMPT_HISTORY_STACK_LIMIT = 50; // Limit undo/redo history
+    let promptHistoryStack = []; // Stores the state of promptInput.value
+    let currentHistoryIndex = -1; // Index of the current state in the stack
+
+    /**
+     * Saves the current prompt input value to the undo/redo history stack.
+     * مقدار فعلی ورودی پرامپت را در پشته تاریخچه Undo/Redo ذخیره می‌کند.
+     */
+    function saveCurrentStateToHistory() {
+        const currentContent = promptInput.value;
+        // If we are not at the end of the history, truncate it
+        if (currentHistoryIndex < promptHistoryStack.length - 1) {
+            promptHistoryStack = promptHistoryStack.slice(0, currentHistoryIndex + 1);
+        }
+        // Add new state
+        promptHistoryStack.push(currentContent);
+        // Limit history size
+        if (promptHistoryStack.length > PROMPT_HISTORY_STACK_LIMIT) {
+            promptHistoryStack.shift(); // Remove the oldest state
+        }
+        currentHistoryIndex = promptHistoryStack.length - 1;
+        updateUndoRedoButtons();
+    }
+
+    /**
+     * Updates the disabled state of Undo and Redo buttons.
+     * وضعیت غیرفعال بودن دکمه‌های Undo و Redo را به‌روزرسانی می‌کند.
+     */
+    function updateUndoRedoButtons() {
+        undoButton.disabled = currentHistoryIndex <= 0;
+        redoButton.disabled = currentHistoryIndex >= promptHistoryStack.length - 1;
+
+        if (undoButton.disabled) undoButton.classList.add('opacity-50', 'cursor-not-allowed');
+        else undoButton.classList.remove('opacity-50', 'cursor-not-allowed');
+
+        if (redoButton.disabled) redoButton.classList.add('opacity-50', 'cursor-not-allowed');
+        else redoButton.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+
+    /**
+     * Performs an undo operation.
+     * عملیات Undo را انجام می‌دهد.
+     */
+    function undo() {
+        if (currentHistoryIndex > 0) {
+            currentHistoryIndex--;
+            promptInput.value = promptHistoryStack[currentHistoryIndex];
+            updateCharCount();
+            updateWordCount();
+            updateTokenCount();
+            triggerAutoSplit(); // Re-split based on undone content
+            updateUndoRedoButtons();
+            showMessage('عملیات واگرد انجام شد.', 'info', 1500);
+        } else {
+            showMessage('هیچ عملیات قابل واگردی وجود ندارد.', 'info', 1500);
+        }
+    }
+
+    /**
+     * Performs a redo operation.
+     * عملیات Redo را انجام می‌دهد.
+     */
+    function redo() {
+        if (currentHistoryIndex < promptHistoryStack.length - 1) {
+            currentHistoryIndex++;
+            promptInput.value = promptHistoryStack[currentHistoryIndex];
+            updateCharCount();
+            updateWordCount();
+            updateTokenCount();
+            triggerAutoSplit(); // Re-split based on redone content
+            updateUndoRedoButtons();
+            showMessage('عملیات بازگردانی انجام شد.', 'info', 1500);
+        } else {
+            showMessage('هیچ عملیات قابل بازگردانی وجود ندارد.', 'info', 1500);
+        }
+    }
+
+    // Add event listeners for Undo/Redo buttons
+    undoButton.addEventListener('click', undo);
+    redoButton.addEventListener('click', redo);
+
 
     // --- Utility Functions ---
 
@@ -222,6 +335,50 @@ document.addEventListener('DOMContentLoaded', () => {
             confirmationCallback();
         }
         hideConfirmationModal();
+    });
+
+    /**
+     * Shows a generic input modal.
+     * یک پنجره مودال ورودی عمومی را نمایش می‌دهد.
+     * @param {string} title - The title of the modal.
+     * @param {string} message - The message/instruction for the user.
+     * @param {string} placeholder - The placeholder text for the input field.
+     * @param {string} initialValue - Initial value for the input field.
+     * @param {function(string): void} onConfirmCallback - Callback function with the input value if 'Confirm' is clicked.
+     * @param {string} confirmText - Text for the confirm button.
+     * @param {string} cancelText - Text for the cancel button.
+     */
+    function showInputModal(title, message, placeholder, initialValue, onConfirmCallback, confirmText = 'تأیید', cancelText = 'لغو') {
+        inputModalTitle.textContent = title;
+        inputModalMessage.textContent = message;
+        inputModalTextInput.placeholder = placeholder;
+        inputModalTextInput.value = initialValue;
+        inputModalConfirmButton.textContent = confirmText;
+        inputModalCancelButton.textContent = cancelText;
+        inputModalCallback = onConfirmCallback;
+        inputModal.classList.remove('hidden');
+        inputModalTextInput.focus(); // Focus the input field
+        inputModalTextInput.select(); // Select existing text for easy editing
+    }
+
+    /**
+     * Hides the generic input modal.
+     * پنجره مودال ورودی عمومی را پنهان می‌کند.
+     */
+    function hideInputModal() {
+        inputModal.classList.add('hidden');
+        inputModalCallback = null;
+        inputModalTextInput.value = ''; // Clear input on hide
+    }
+
+    // Event listeners for generic input modal buttons
+    inputModalCloseButton.addEventListener('click', hideInputModal); // New: Close button for input modal
+    inputModalCancelButton.addEventListener('click', hideInputModal);
+    inputModalConfirmButton.addEventListener('click', () => {
+        if (inputModalCallback) {
+            inputModalCallback(inputModalTextInput.value.trim());
+        }
+        hideInputModal();
     });
 
 
@@ -367,7 +524,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const count = aiResponseTextarea.value.length;
         aiCharCountDisplay.textContent = `کاراکترها: ${count}`;
 
-        const percentage = (count / MAX_CHARS_PER_PART) * 100;
+        const limit = settings.aiResponseCharLimit > 0 ? settings.aiResponseCharLimit : MAX_CHARS_PER_PART; // Use AI limit if set, else main limit
+        const percentage = (count / limit) * 100;
         aiResponseCharLimitBar.style.width = `${Math.min(100, percentage)}%`;
         // Remove existing classes first
         aiResponseCharLimitBar.classList.remove('warning', 'danger');
@@ -423,6 +581,8 @@ document.addEventListener('DOMContentLoaded', () => {
         copyAllButton.classList.add('opacity-50', 'cursor-not-allowed');
         exportTextButton.disabled = true;
         exportTextButton.classList.add('opacity-50', 'cursor-not-allowed');
+        exportMarkdownButton.disabled = true; // New
+        exportMarkdownButton.classList.add('opacity-50', 'cursor-not-allowed'); // New
         exportJsonButton.disabled = true;
         exportJsonButton.classList.add('opacity-50', 'cursor-not-allowed');
         clearOutputOnlyButton.disabled = true;
@@ -442,6 +602,8 @@ document.addEventListener('DOMContentLoaded', () => {
         copyAllButton.classList.add('opacity-50', 'cursor-not-allowed');
         exportTextButton.disabled = true;
         exportTextButton.classList.add('opacity-50', 'cursor-not-allowed');
+        exportMarkdownButton.disabled = true; // New
+        exportMarkdownButton.classList.add('opacity-50', 'cursor-not-allowed'); // New
         exportJsonButton.disabled = true;
         exportJsonButton.classList.add('opacity-50', 'cursor-not-allowed');
         clearOutputOnlyButton.disabled = true;
@@ -471,6 +633,33 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
         showMessage('بخش‌ها با موفقیت در یک فایل متنی ذخیره شدند.', 'success');
+    }
+
+    /**
+     * Exports all split parts to a single Markdown file.
+     * تمام بخش‌های تقسیم‌شده را به یک فایل Markdown واحد خروجی می‌دهد.
+     */
+    function exportMarkdownFile() {
+        const promptParts = Array.from(outputContainer.querySelectorAll('pre')).map(pre => pre.textContent);
+        if (promptParts.length === 0) {
+            showMessage('هیچ بخشی برای خروجی گرفتن وجود ندارد.', 'error');
+            return;
+        }
+        // Join parts with a clear Markdown separator, e.g., "---" or "### Part X"
+        const combinedMarkdown = promptParts.map((part, index) => {
+            return `## بخش ${index + 1}\n\n${part}\n`; // Example: Add a Markdown heading for each part
+        }).join('\n---\n\n'); // Use a horizontal rule as a break
+
+        const blob = new Blob([combinedMarkdown], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'prompt_parts.md';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showMessage('بخش‌ها با موفقیت در یک فایل مارک‌داون ذخیره شدند.', 'success');
     }
 
     /**
@@ -728,6 +917,8 @@ document.addEventListener('DOMContentLoaded', () => {
             copyAllButton.classList.add('opacity-50', 'cursor-not-allowed');
             exportTextButton.disabled = true;
             exportTextButton.classList.add('opacity-50', 'cursor-not-allowed');
+            exportMarkdownButton.disabled = true; // New
+            exportMarkdownButton.classList.add('opacity-50', 'cursor-not-allowed'); // New
             exportJsonButton.disabled = true;
             exportJsonButton.classList.add('opacity-50', 'cursor-not-allowed');
             clearOutputOnlyButton.disabled = true;
@@ -739,6 +930,8 @@ document.addEventListener('DOMContentLoaded', () => {
         copyAllButton.classList.remove('opacity-50', 'cursor-not-allowed');
         exportTextButton.disabled = false;
         exportTextButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        exportMarkdownButton.disabled = false; // New
+        exportMarkdownButton.classList.remove('opacity-50', 'cursor-not-allowed'); // New
         exportJsonButton.disabled = false;
         exportJsonButton.classList.remove('opacity-50', 'cursor-not-allowed');
         clearOutputOnlyButton.disabled = false;
@@ -799,6 +992,32 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             buttonContainer.appendChild(aiRefineButton);
 
+            // New: Rename Part button (visual only)
+            const renamePartButton = document.createElement('button');
+            renamePartButton.classList.add('bg-purple-500', 'hover:bg-purple-600', 'text-white', 'py-2', 'px-4', 'rounded-lg', 'font-medium', 'transition', 'duration-200', 'flex', 'items-center', 'justify-center');
+            renamePartButton.innerHTML = `<i class="fas fa-edit ml-2"></i> تغییر نام بخش`;
+            renamePartButton.title = `تغییر نام نمایش بخش ${index + 1}`;
+            renamePartButton.addEventListener('click', () => {
+                const currentDisplayTitle = partTitle.textContent; // Get current displayed title
+                showInputModal(
+                    `تغییر نام نمایش بخش ${index + 1}`,
+                    `نام جدید برای نمایش این بخش را وارد کنید:`,
+                    'نام نمایش جدید',
+                    currentDisplayTitle.split('(')[0].trim(), // Pre-fill with existing name without char count
+                    (newDisplayName) => {
+                        if (newDisplayName.trim() === '') {
+                            showMessage('نام نمایش نمی‌تواند خالی باشد. نام پیش‌فرض بازگردانده شد.', 'error');
+                            partTitle.textContent = `بخش ${index + 1} ( ${partContent.length} کاراکتر )`; // Revert to default
+                            return;
+                        }
+                        partTitle.textContent = `${newDisplayName.trim()} ( ${partContent.length} کاراکتر )`;
+                        showMessage(`نام نمایش بخش ${index + 1} با موفقیت تغییر کرد.`, 'success');
+                    },
+                    'تغییر نام'
+                );
+            });
+            buttonContainer.appendChild(renamePartButton);
+
             // New: Delete Part button
             const deletePartButton = document.createElement('button');
             deletePartButton.classList.add('bg-red-500', 'hover:bg-red-600', 'text-white', 'py-2', 'px-4', 'rounded-lg', 'font-medium', 'transition', 'duration-200', 'flex', 'items-center', 'justify-center');
@@ -836,7 +1055,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTokenCount();
             showMessage(`بخش ${indexToDelete + 1} حذف شد.`, 'success');
             triggerAutoSplit(); // Re-split and re-render the output
-            saveCurrentPromptState(); // Save to history after deletion
+            saveCurrentStateToHistory(); // Save to history after deletion
         } else {
             showMessage('بخش نامعتبر برای حذف.', 'error');
         }
@@ -846,7 +1065,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- AI Integration Logic ---
     let currentPartOriginalContent = null;
     let currentPartOriginalIndex = -1;
-    let currentlyHighlightedPartElement = null; // New: Reference to the DOM element being highlighted
+    let currentlyHighlightedPartElement = null;
 
     /**
      * Opens the AI response modal and prepares for AI interaction.
@@ -894,13 +1113,24 @@ document.addEventListener('DOMContentLoaded', () => {
         aiSendToAIButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> در حال ارسال...`;
 
         const finalCommand = aiPromptInput.value.trim(); // Always use aiPromptInput value
+        const temperature = parseFloat(aiTemperatureInput.value);
+        const topP = parseFloat(aiTopPInput.value);
+        const aiResponseCharLimit = parseInt(aiResponseCharLimitInput.value, 10);
 
         try {
             const prompt = `${finalCommand}:\n\n"${textToRefine}"\n\nلطفا فقط متن اصلاح شده یا خلاصه شده را برگردانید و از هرگونه مقدمه یا خاتمه اضافه خودداری کنید.`;
 
             let chatHistory = [];
             chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-            const payload = { contents: chatHistory };
+            const payload = {
+                contents: chatHistory,
+                generationConfig: {
+                    temperature: isNaN(temperature) ? 0.7 : Math.max(0, Math.min(1, temperature)),
+                    topP: isNaN(topP) ? 0.9 : Math.max(0, Math.min(1, topP)),
+                    // maxOutputTokens is not directly configurable for gemini-2.0-flash via generateContent payload.
+                    // Client-side truncation will be applied after response.
+                }
+            };
             const apiKey = "";
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
             
@@ -915,7 +1145,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (result.candidates && result.candidates.length > 0 &&
                 result.candidates[0].content && result.candidates[0].content.parts &&
                 result.candidates[0].content.parts.length > 0) {
-                const aiResponse = result.candidates[0].content.parts[0].text;
+                let aiResponse = result.candidates[0].content.parts[0].text;
+                
+                // Apply client-side truncation if a limit is set
+                if (aiResponseCharLimit > 0 && aiResponse.length > aiResponseCharLimit) {
+                    aiResponse = aiResponse.substring(0, aiResponseCharLimit);
+                    showMessage(`پاسخ هوش مصنوعی به دلیل محدودیت ${aiResponseCharLimit} کاراکتری کوتاه شد.`, 'info');
+                }
+
                 aiResponseTextarea.value = aiResponse.trim();
                 showMessage(`پاسخ هوش مصنوعی دریافت شد.`, 'success');
             } else {
@@ -1078,7 +1315,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateTokenCount(); // Update token count after insert
             triggerAutoSplit();
             closeAiModalButton.click(); // Close AI modal and remove highlight
-            saveCurrentPromptState(); // Save state after AI insertion
+            saveCurrentStateToHistory(); // Save state after AI insertion
         } else {
             showMessage('پاسخ هوش مصنوعی برای درج خالی است.', 'error');
         }
@@ -1090,6 +1327,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Drag and Drop Reordering Logic ---
     let draggedItem = null;
+    let placeholder = null; // New: Placeholder element for drag-and-drop
 
     function addDragDropListenersToParts() {
         const parts = outputContainer.querySelectorAll('.prompt-part-box');
@@ -1097,6 +1335,11 @@ document.addEventListener('DOMContentLoaded', () => {
             part.addEventListener('dragstart', (e) => {
                 draggedItem = part;
                 e.dataTransfer.effectAllowed = 'move';
+                // Create and insert placeholder when drag starts
+                placeholder = document.createElement('div');
+                placeholder.classList.add('drag-placeholder');
+                part.parentNode.insertBefore(placeholder, part.nextSibling);
+
                 setTimeout(() => {
                     part.classList.add('dragging');
                 }, 0);
@@ -1110,20 +1353,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     const offset = bounding.y + (bounding.height / 2);
 
                     if (e.clientY - offset > 0) {
-                        targetItem.parentNode.insertBefore(draggedItem, targetItem.nextSibling);
+                        // Dragging below target, insert after
+                        if (targetItem.nextSibling !== placeholder) { // Prevent moving if placeholder is already correctly positioned
+                            targetItem.parentNode.insertBefore(placeholder, targetItem.nextSibling);
+                        }
                     } else {
-                        targetItem.parentNode.insertBefore(draggedItem, targetItem);
+                        // Dragging above target, insert before
+                        if (targetItem.previousSibling !== placeholder) { // Prevent moving if placeholder is already correctly positioned
+                             targetItem.parentNode.insertBefore(placeholder, targetItem);
+                        }
                     }
                 }
             });
 
             part.addEventListener('dragleave', (e) => {
-                // No specific action needed as styling is handled by CSS (drag-over)
+                // No specific action needed for `.prompt-part-box` itself
             });
 
             part.addEventListener('dragend', (e) => {
-                draggedItem.classList.remove('dragging');
+                if (draggedItem) {
+                    draggedItem.classList.remove('dragging');
+                    if (placeholder && placeholder.parentNode) {
+                        placeholder.parentNode.removeChild(placeholder); // Remove placeholder
+                    }
+                    // Insert the dragged item at the placeholder's final position
+                    const targetParent = outputContainer;
+                    if (placeholder && placeholder.parentNode === targetParent) {
+                        targetParent.insertBefore(draggedItem, placeholder);
+                    } else {
+                         // Fallback if placeholder was unexpectedly removed, just re-append to parent
+                        outputContainer.appendChild(draggedItem);
+                    }
+                }
                 draggedItem = null;
+                placeholder = null; // Reset placeholder
                 rebuildPromptFromReorderedParts();
                 // After reordering, if the AI modal was open for a part, reset its original index
                 if (currentPartOriginalContent && currentPartOriginalIndex !== -1) {
@@ -1143,6 +1406,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+
+        // Add dragover listener to the output container itself to handle drops at the end or empty space
+        outputContainer.addEventListener('dragover', (e) => {
+            e.preventDefault(); // Allows drop
+            if (draggedItem && !e.target.closest('.prompt-part-box') && placeholder && !placeholder.parentNode) {
+                // If dragging over empty space in the container, append placeholder to end
+                outputContainer.appendChild(placeholder);
+            }
+        });
     }
 
     /**
@@ -1161,19 +1433,21 @@ document.addEventListener('DOMContentLoaded', () => {
         updateTokenCount(); // Update token count after reorder
         showMessage('ترتیب بخش‌ها تغییر کرد. می‌توانید پرامپپت اصلی را کپی کنید یا دوباره تقسیم کنید.', 'info');
         triggerAutoSplit();
-        saveCurrentPromptState(); // Save to history after reordering
+        saveCurrentStateToHistory(); // Save to history after reordering
     }
 
 
-    // --- Prompt History Logic ---
+    // --- Prompt History Logic (distinct from undo/redo stack) ---
     const PROMPT_HISTORY_LIMIT = 20; // Limit history to last 20 states
     let promptHistory = []; // Stores { content: string, timestamp: Date }
 
+    // saveCurrentPromptState() is for undo/redo.
+    // We need a separate function for long-term history saved to localStorage.
     /**
-     * Saves the current state of the prompt input to history.
-     * حالت فعلی ورودی پرامپت را در تاریخچه ذخیره می‌کند.
+     * Saves the current prompt input value to the long-term history.
+     * مقدار فعلی ورودی پرامپت را در تاریخچه بلندمدت ذخیره می‌کند.
      */
-    function saveCurrentPromptState() {
+    function saveLongTermPromptHistory() {
         const currentContent = promptInput.value.trim();
         // Prevent saving if current content is identical to the latest history entry OR if content is empty and history already has an empty entry
         if (promptHistory.length > 0 && currentContent === promptHistory[0].content) {
@@ -1253,6 +1527,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 showMessage(`پرامپت به نسخه قبلی بازگردانده شد (${timeAgo}).`, 'info');
                 promptHistoryDropdownMenu.classList.add('hidden');
                 triggerAutoSplit();
+                saveCurrentStateToHistory(); // Save the loaded state to undo/redo history
                 // When loading from history, we *don't* want to immediately add to history again
                 // The next user input will add a new state.
             });
@@ -1396,8 +1671,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateCharCount();
                     updateWordCount();
                     updateTokenCount();
-                    promptHistory = []; // Clear history if loading from URL to avoid confusion
+                    // Clear long-term history if loading from URL to avoid confusion
+                    promptHistory = [];
                     renderPromptHistoryList();
+                    // Clear undo/redo history as well
+                    promptHistoryStack = [];
+                    currentHistoryIndex = -1;
+                    updateUndoRedoButtons();
                 }
                 if (decodedData.settings) {
                     for (const key in decodedData.settings) {
@@ -1412,11 +1692,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     partPrefixInput.value = settings.partPrefix;
                     partSuffixInput.value = settings.partSuffix;
                     includeDelimitersInOutputCheckbox.checked = settings.includeDelimitersInOutput;
+                    aiTemperatureInput.value = settings.aiTemperature; // New
+                    aiTopPInput.value = settings.aiTopP; // New
+                    aiResponseCharLimitInput.value = settings.aiResponseCharLimit; // New
                     applyTheme(settings.theme);
                 }
                 showMessage('پرامپت و تنظیمات از لینک بارگذاری شد!', 'info');
                 history.replaceState(null, '', window.location.pathname); // Clean up URL
                 triggerAutoSplit();
+                // Ensure initial state from URL is saved to undo history
+                saveCurrentStateToHistory();
             }
             catch (e) {
                 console.error('Error decoding/applying shared URL data:', e);
@@ -1454,7 +1739,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateWordCount();
                     updateTokenCount();
                     triggerAutoSplit();
-                    saveCurrentPromptState();
+                    saveCurrentStateToHistory(); // Save loaded file to undo history
+                    saveLongTermPromptHistory(); // Save loaded file to long-term history
                     saveAutoPrompt();
                     showMessage('فایل متنی با موفقیت بارگذاری شد.', 'success');
                 };
@@ -1467,7 +1753,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-
+    
     // Handle file input click fallback (though drag-drop is primary)
     fileInput.addEventListener('change', (e) => {
         const files = e.target.files;
@@ -1481,7 +1767,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateWordCount();
                     updateTokenCount();
                     triggerAutoSplit();
-                    saveCurrentPromptState();
+                    saveCurrentStateToHistory(); // Save loaded file to undo history
+                    saveLongTermPromptHistory(); // Save loaded file to long-term history
                     saveAutoPrompt();
                     showMessage('فایل متنی با موفقیت بارگذاری شد.', 'success');
                 };
@@ -1512,6 +1799,16 @@ document.addEventListener('DOMContentLoaded', () => {
         const regexDelim = regexDelimiterInput.value;
         const includeDelimiters = includeDelimitersInOutputCheckbox.checked;
 
+        // Basic validation for regex
+        if (strategy === 'regex' && regexDelim.trim() !== '') {
+            try {
+                new RegExp(regexDelim); // Test if regex is valid
+            } catch (e) {
+                showMessage(`عبارت با قاعده نامعتبر: ${e.message}`, 'error');
+                return;
+            }
+        }
+
         splitButton.disabled = true;
         splitButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> در حال تقسیم...`;
         
@@ -1520,7 +1817,8 @@ document.addEventListener('DOMContentLoaded', () => {
         splitButton.disabled = false;
         splitButton.innerHTML = `<i class="fas fa-cut mr-2"></i> تقسیم پرامپت`;
 
-        saveCurrentPromptState();
+        saveCurrentStateToHistory(); // Save state after manual split
+        saveLongTermPromptHistory(); // Save state to long-term history after manual split
     });
 
     copyAllButton.addEventListener('click', () => {
@@ -1549,7 +1847,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 updateTokenCount();
                 setTimeout(() => {
                     triggerAutoSplit();
-                    saveCurrentPromptState(); // Save example as first history entry
+                    saveCurrentStateToHistory(); // Save example to undo history
+                    saveLongTermPromptHistory(); // Save example as first long-term history entry
                 }, 100);
                 showMessage('مثال با موفقیت بارگذاری شد.', 'success');
             } else {
@@ -1569,6 +1868,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     clearOutputOnlyButton.addEventListener('click', clearOutputOnly);
     exportTextButton.addEventListener('click', exportTextFile);
+    exportMarkdownButton.addEventListener('click', exportMarkdownFile); // New
     exportJsonButton.addEventListener('click', exportJsonFile);
     savePromptButton.addEventListener('click', saveCurrentPrompt);
     shareButton.addEventListener('click', generateShareableUrl);
@@ -1594,18 +1894,36 @@ document.addEventListener('DOMContentLoaded', () => {
         promptHistoryDropdownToggle.setAttribute('aria-expanded', !isExpanded);
     });
 
+    // New: Prompt Templates Dropdown Toggle
+    templateDropdownToggle.addEventListener('click', () => {
+        templateDropdownMenu.classList.toggle('hidden');
+        if (!templateDropdownMenu.classList.contains('hidden')) {
+            renderPromptTemplates();
+        }
+        const isExpanded = templateDropdownToggle.getAttribute('aria-expanded') === 'true';
+        templateDropdownToggle.setAttribute('aria-expanded', !isExpanded);
+    });
+
+
     // Close dropdowns if clicked outside
     document.addEventListener('click', (event) => {
         if (!loadPromptDropdownToggle.contains(event.target) && !loadPromptDropdownMenu.contains(event.target)) {
             loadPromptDropdownMenu.classList.add('hidden');
             loadPromptDropdownToggle.setAttribute('aria-expanded', 'false');
         }
-        if (!promptHistoryDropdownToggle.contains(event.target) && !promptHistoryDropdownMenu.contains(event.target) && !confirmModal.contains(event.target)) {
+        if (!promptHistoryDropdownToggle.contains(event.target) && !promptHistoryDropdownMenu.contains(event.target) && !confirmModal.contains(event.target) && !inputModal.contains(event.target)) {
             promptHistoryDropdownMenu.classList.add('hidden');
             promptHistoryDropdownToggle.setAttribute('aria-expanded', 'false');
         }
-        // Don't close confirmation modal if clicking outside it but within it
+        // New: Close template dropdown if clicked outside
+        if (!templateDropdownToggle.contains(event.target) && !templateDropdownMenu.contains(event.target)) {
+            templateDropdownMenu.classList.add('hidden');
+            templateDropdownToggle.setAttribute('aria-expanded', 'false');
+        }
     });
+
+    // New: Close input modal if clicking its specific close button
+    inputModalCloseButton.addEventListener('click', hideInputModal);
 
 
     // Toggle visibility of custom/regex delimiter inputs based on strategy selection
@@ -1642,6 +1960,10 @@ document.addEventListener('DOMContentLoaded', () => {
     regexDelimiterInput.addEventListener('input', debounceSaveSettings);
     partPrefixInput.addEventListener('input', debounceSaveSettings);
     partSuffixInput.addEventListener('input', debounceSaveSettings);
+    // New: AI advanced settings inputs also trigger save
+    aiTemperatureInput.addEventListener('input', debounceSaveSettings);
+    aiTopPInput.addEventListener('input', debounceSaveSettings);
+    aiResponseCharLimitInput.addEventListener('input', debounceSaveSettings);
     
     includeDelimitersInOutputCheckbox.addEventListener('change', () => {
         saveSettings();
@@ -1660,7 +1982,8 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(debounceTimerAutoSplit);
         debounceTimerAutoSplit = setTimeout(() => {
             triggerAutoSplit();
-            saveCurrentPromptState();
+            saveCurrentStateToHistory(); // Save to undo history on input
+            saveLongTermPromptHistory(); // Save to long-term history on input
             saveAutoPrompt(); // Trigger auto-save on input
         }, DEBOUNCE_DELAY_AUTO_SPLIT);
     });
@@ -1673,6 +1996,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const customDelim = customDelimiterInput.value;
             const regexDelim = regexDelimiterInput.value;
             const includeDelimiters = includeDelimitersInOutputCheckbox.checked;
+
+            // Basic validation for regex before splitting
+            if (strategy === 'regex' && regexDelim.trim() !== '') {
+                try {
+                    new RegExp(regexDelim); // Test if regex is valid
+                } catch (e) {
+                    showMessage(`عبارت با قاعده نامعتبر: ${e.message}`, 'error');
+                    splitButton.disabled = false;
+                    splitButton.innerHTML = `<i class="fas fa-cut mr-2"></i> تقسیم پرامپت`;
+                    return;
+                }
+            }
 
             splitButton.disabled = true;
             splitButton.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> در حال تقسیم...`;
@@ -1731,28 +2066,39 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const promptName = prompt('لطفاً یک نام برای پرامپت خود وارد کنید:'); // Keep prompt for name input
-        if (!promptName || promptName.trim() === '') {
-            showMessage('نام پرامپت نمی‌تواند خالی باشد.', 'error');
-            return;
-        }
+        const defaultName = `پرامپت ${new Date().toLocaleString()}`;
 
-        const savedPrompts = getSavedPrompts();
-        const existingPromptIndex = savedPrompts.findIndex(p => p.name === promptName.trim());
+        showInputModal(
+            'ذخیره پرامپت',
+            'لطفاً یک نام برای پرامپت خود وارد کنید:',
+            'نام پرامپت',
+            defaultName,
+            (promptName) => {
+                if (!promptName || promptName.trim() === '') {
+                    showMessage('نام پرامپت نمی‌تواند خالی باشد.', 'error');
+                    return;
+                }
 
-        if (existingPromptIndex !== -1) {
-            showConfirmationModal(`پرامپتی با نام "${promptName.trim()}" از قبل وجود دارد. آیا می‌خواهید آن را بازنویسی کنید؟`, () => {
-                savedPrompts[existingPromptIndex].content = promptContent;
-                savePromptsToLocalStorage(savedPrompts);
-                renderSavedPromptsList();
-                showMessage(`پرامپت "${promptName.trim()}" با موفقیت بازنویسی شد.`, 'success');
-            }, 'بازنویسی پرامپت');
-        } else {
-            savedPrompts.push({ name: promptName.trim(), content: promptContent });
-            savePromptsToLocalStorage(savedPrompts);
-            renderSavedPromptsList();
-            showMessage(`پرامپت "${promptName.trim()}" با موفقیت ذخیره شد.`, 'success');
-        }
+                const savedPrompts = getSavedPrompts();
+                const existingPromptIndex = savedPrompts.findIndex(p => p.name === promptName.trim());
+
+                if (existingPromptIndex !== -1) {
+                    showConfirmationModal(`پرامپتی با نام "${promptName.trim()}" از قبل وجود دارد. آیا می‌خواهید آن را بازنویسی کنید؟`, () => {
+                        savedPrompts[existingPromptIndex].content = promptContent;
+                        savePromptsToLocalStorage(savedPrompts);
+                        renderSavedPromptsList();
+                        showMessage(`پرامپت "${promptName.trim()}" با موفقیت بازنویسی شد.`, 'success');
+                    }, 'بازنویسی پرامپت');
+                } else {
+                    savedPrompts.push({ name: promptName.trim(), content: promptContent });
+                    savePromptsToLocalStorage(savedPrompts);
+                    renderSavedPromptsList();
+                    showMessage(`پرامپت "${promptName.trim()}" با موفقیت ذخیره شد.`, 'success');
+                }
+            },
+            'ذخیره',
+            'لغو'
+        );
     }
 
     /**
@@ -1788,7 +2134,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 loadPromptDropdownMenu.classList.add('hidden');
                 loadPromptDropdownToggle.setAttribute('aria-expanded', 'false'); // Close and update aria
                 triggerAutoSplit();
-                saveCurrentPromptState(); // Save state after loading from saved prompts
+                saveCurrentStateToHistory(); // Save state after loading from saved prompts to undo history
+                saveLongTermPromptHistory(); // Save state after loading from saved prompts to long-term history
             });
             div.appendChild(loadLink);
 
@@ -1819,6 +2166,53 @@ document.addEventListener('DOMContentLoaded', () => {
         savedPrompts = savedPrompts.filter(p => p.name !== nameToDelete);
         savePromptsToLocalStorage(savedPrompts);
         renderSavedPromptsList();
+    }
+
+    // --- Prompt Templates Logic ---
+    const promptTemplates = [
+        { name: "ایمیل رسمی", content: "موضوع: [موضوع]\n\nبا سلام و احترام،\n\n[متن ایمیل رسمی]\n\nبا تشکر،\n[نام شما]" },
+        { name: "داستان کوتاه", content: "عنوان: [عنوان داستان]\n\n[شروع داستان]\n\n[میانه داستان]\n\n[پایان داستان]" },
+        { name: "ایده پردازی", content: "موضوع: [موضوع ایده پردازی]\n\nایده‌های اولیه:\n- [ایده 1]\n- [ایده 2]\n- [ایده 3]\n\nنکات کلیدی:\n- [نکته 1]\n- [نکته 2]" },
+        { name: "خلاصه کتاب", content: "عنوان کتاب: [نام کتاب]\nنویسنده: [نام نویسنده]\n\nخلاصه:\n[خلاصه کلی کتاب]\n\nنکات کلیدی:\n- [نکته کلیدی 1]\n- [نکته کلیدی 2]\n\nبخش‌های مورد علاقه:\n[بخش مورد علاقه 1]\n[بخش مورد علاقه 2]" }
+    ];
+
+    /**
+     * Renders the list of prompt templates in the dropdown menu.
+     * لیست الگوهای پرامپت را در منوی کشویی رندر می‌کند.
+     */
+    function renderPromptTemplates() {
+        templateList.innerHTML = '';
+        if (promptTemplates.length === 0) {
+            templateList.innerHTML = '<p class="text-center text-gray-500 dark:text-gray-400 p-2">الگویی وجود ندارد.</p>';
+            return;
+        }
+
+        promptTemplates.forEach(template => {
+            const div = document.createElement('div');
+            div.classList.add('flex', 'justify-between', 'items-center', 'p-2', 'hover:bg-gray-100', 'dark:hover:bg-gray-600', 'transition-colors', 'duration-200');
+            div.setAttribute('role', 'menuitem');
+
+            const loadLink = document.createElement('a');
+            loadLink.href = '#';
+            loadLink.classList.add('flex-grow', 'text-gray-700', 'dark:text-gray-200', 'block', 'px-2', 'py-1', 'text-sm', 'truncate');
+            loadLink.textContent = template.name;
+            loadLink.title = template.name;
+            loadLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                promptInput.value = template.content;
+                updateCharCount();
+                updateWordCount();
+                updateTokenCount();
+                showMessage(`الگوی "${template.name}" بارگذاری شد.`, 'success');
+                templateDropdownMenu.classList.add('hidden');
+                templateDropdownToggle.setAttribute('aria-expanded', 'false');
+                triggerAutoSplit();
+                saveCurrentStateToHistory(); // Save loaded template to undo history
+                saveLongTermPromptHistory(); // Save loaded template to long-term history
+            });
+            div.appendChild(loadLink);
+            templateList.appendChild(div);
+        });
     }
 
 
@@ -1882,6 +2276,10 @@ document.addEventListener('DOMContentLoaded', () => {
                                 renderSavedPromptsList();
                                 renderPromptHistoryList();
                                 triggerAutoSplit();
+                                // Clear undo/redo history upon full data import
+                                promptHistoryStack = [];
+                                currentHistoryIndex = -1;
+                                updateUndoRedoButtons();
                                 showMessage('تمام داده‌ها با موفقیت وارد شدند!', 'success');
                             }
                         , 'وارد کردن داده‌ها');
@@ -1908,6 +2306,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isCtrlCmd) {
             switch (e.key.toLowerCase()) {
+                case 'z': // Ctrl/Cmd + Z for Undo
+                    e.preventDefault();
+                    undoButton.click();
+                    break;
+                case 'y': // Ctrl/Cmd + Y for Redo
+                    e.preventDefault();
+                    redoButton.click();
+                    break;
                 case 's':
                     e.preventDefault();
                     saveCurrentPrompt();
@@ -1921,6 +2327,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 case 'e':
                     e.preventDefault();
                     exportTextButton.click();
+                    break;
+                case 'm': // Ctrl/Cmd + M for Markdown Export
+                    e.preventDefault();
+                    exportMarkdownButton.click();
                     break;
                 case 'j':
                     e.preventDefault();
@@ -1944,6 +2354,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     e.preventDefault();
                     promptHistoryDropdownToggle.click();
                     break;
+                case 't': // Ctrl+T for Templates Dropdown
+                    e.preventDefault();
+                    templateDropdownToggle.click();
+                    break;
             }
         }
     });
@@ -1956,18 +2370,27 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPromptHistoryFromLocalStorage(); // Load history from local storage
     startAutoSave(); // Start auto-save interval
 
+    // Initial population of undo/redo history if promptInput has content
+    if (promptInput.value.trim() !== '') {
+        saveCurrentStateToHistory();
+    }
+    updateUndoRedoButtons(); // Initialize undo/redo button states
+
     updateCharCount();
     updateWordCount();
     updateTokenCount(); // Initial update of token count
 
     renderSavedPromptsList();
     renderPromptHistoryList(); // Render history on load
+    renderPromptTemplates(); // New: Render prompt templates on load
 
     // Disable buttons initially (will be enabled by renderOutput if parts exist)
     copyAllButton.disabled = true;
     copyAllButton.classList.add('opacity-50', 'cursor-not-allowed');
     exportTextButton.disabled = true;
     exportTextButton.classList.add('opacity-50', 'cursor-not-allowed');
+    exportMarkdownButton.disabled = true; // New
+    exportMarkdownButton.classList.add('opacity-50', 'cursor-not-allowed'); // New
     exportJsonButton.disabled = true;
     exportJsonButton.classList.add('opacity-50', 'cursor-not-allowed');
     clearOutputOnlyButton.disabled = true;
@@ -1981,6 +2404,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Trigger an initial auto-split if there's content (either from URL or pre-existing)
     if (promptInput.value.trim() !== '') {
         triggerAutoSplit();
-        saveCurrentPromptState(); // Save the initial state to history (if not empty from load)
+    } else {
+        // If the prompt input is empty after loading, clear output, too.
+        clearOutputOnly();
     }
 });
