@@ -1699,6 +1699,8 @@ document.addEventListener('DOMContentLoaded', () => {
     clearAllButton.addEventListener('click', () => {
         showConfirmationModal('آیا مطمئنید می‌خواهید همه چیز را پاک کنید؟ این عمل برگشت‌ناپذیر است.', clearAll);
     });
+    // Trigger hidden file input when the upload button is clicked
+    uploadFileButton.addEventListener('click', () => fileInput.click());
     clearOutputOnlyButton.addEventListener('click', clearOutputOnly);
     exportTextButton.addEventListener('click', exportTextFile);
     exportMarkdownButton.addEventListener('click', exportMarkdownFile); // New
