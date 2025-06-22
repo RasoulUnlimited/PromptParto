@@ -2297,3 +2297,6 @@ document.addEventListener('DOMContentLoaded', () => {
         clearOutputOnly();
     }
 });
+
+window.exportAllUserData = exportAllUserData;
+window.importAllUserData = importAllUserData;
