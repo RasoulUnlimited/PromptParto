@@ -11,7 +11,7 @@ PromptParto is a lightweight web tool for breaking long prompts into manageable 
 
 ## Running locally
 
-Simply open `index.html` in your browser. Styles are in `css/style.css` and JavaScript in `js/main.js`. The page loads TailwindCSS and other assets from public CDNs, so an internet connection is required on first load. You can also host the project on GitHub Pages.
+Simply open `index.html` in your browser. Styles are in `css/style.css` and JavaScript in `js/components/main.js`. The page loads TailwindCSS and other assets from public CDNs, so an internet connection is required on first load. You can also host the project on GitHub Pages, integrated with Cloudflare for enhanced performance and security.
 
 ### Project structure
 
@@ -21,7 +21,8 @@ Simply open `index.html` in your browser. Styles are in `css/style.css` and Java
   css/
     style.css
   js/
-    main.js
+    components/
+      main.js
   prompts/
     example.json
 ```
@@ -61,6 +62,5 @@ npm run lint
 npm test
 ```
 
-`npm run lint` checks all JavaScript files under `js/` using ESLint. The `test` script currently prints a placeholder message.
 `npm run lint` checks all JavaScript files under `js/` using ESLint and all CSS files with Stylelint.
-`npm test` runs the Jest test suite found in the `tests/` directory.
+`npm test` currently prints "No tests yet" because automated tests have not been implemented.
