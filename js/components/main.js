@@ -2288,6 +2288,10 @@ document.addEventListener('DOMContentLoaded', () => {
     exportAllDataButton.addEventListener('click', exportAllUserData);
     importAllDataButton.addEventListener('click', importAllUserData);
 
+    // EXPLICITLY expose to global scope:
+    window.exportAllUserData = exportAllUserData;
+    window.importAllUserData = importAllUserData;   
+
 
     // Trigger an initial auto-split if there's content (either from URL or pre-existing)
     if (promptInput.value.trim() !== '') {
