@@ -64,3 +64,5 @@ npm test
 
 `npm run lint` checks all JavaScript files under `js/` using ESLint and all CSS files with Stylelint.
 `npm test` currently prints "No tests yet" because automated tests have not been implemented.
+
+The build step (`npm run build`) outputs the production files to `dist/` and automatically generates `dist/sitemap.xml` based on all HTML files. This ensures search engines always receive an up‑to‑date sitemap when new pages are added.

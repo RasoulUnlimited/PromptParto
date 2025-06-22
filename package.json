@@ -9,7 +9,7 @@
     "lint:js": "eslint js/**/*.js",
     "lint:css": "stylelint \"css/**/*.css\"",
     "test": "echo \"No tests yet\"",
-    "build": "vite build",
+    "build": "vite build && node js/components/generate-sitemap.js",
     "dev": "vite"
   },
   "keywords": [],

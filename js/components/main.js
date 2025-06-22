@@ -540,18 +540,8 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {HTMLElement} [buttonElement] - Optional: The button element to provide visual feedback.
      */
     function copyTextToClipboard(text, feedbackName = 'متن', buttonElement = null) {
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.left = '-9999px';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.focus();
-        textarea.select();
-        try {
-            document.execCommand('copy');
+        const onSuccess = () => {
             showMessage(`${feedbackName} با موفقیت کپی شد!`, 'success');
-
             if (buttonElement) {
                 const originalText = buttonElement.innerHTML;
                 buttonElement.classList.add('copied', 'pulse');
@@ -562,12 +552,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 1500);
                 setTimeout(() => buttonElement.classList.remove('pulse'), 400);
             }
-
-        } catch (err) {
+        };
+        const onError = (err) => {
             console.error('Failed to copy text: ', err);
             showMessage(`خطا در کپی کردن ${feedbackName}.`, 'error');
-        } finally {
-            document.body.removeChild(textarea);
+        };
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(onSuccess).catch((err) => {
+                console.warn('navigator.clipboard.writeText failed, falling back to execCommand.', err);
+                fallbackCopy();
+            });
+        } else {
+            fallbackCopy();
+        }
+
+        function fallbackCopy() {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                onSuccess();
+            } catch (err) {
+                onError(err);
+            } finally {
+                document.body.removeChild(textarea);
+            }
         }
     }
 
