@@ -12,6 +12,7 @@ export function saveLongTermPromptHistory() {
 }
 
 export function loadPromptHistoryFromLocalStorage() {
+    window.promptHistory = [];
     try {
         const storedHistory = localStorage.getItem('promptPartoHistory');
         if (storedHistory) {
@@ -22,7 +23,6 @@ export function loadPromptHistoryFromLocalStorage() {
         }
     } catch (e) {
         console.error('Error loading prompt history from localStorage:', e);
-        window.promptHistory = [];
     }
 }
 

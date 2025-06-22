@@ -1494,6 +1494,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Prompt History Logic (distinct from undo/redo stack) ---
     const PROMPT_HISTORY_LIMIT = 20; // Limit history to last 20 states
+    window.PROMPT_HISTORY_LIMIT = PROMPT_HISTORY_LIMIT;
     let promptHistory = []; // Stores { content: string, timestamp: Date }
 
     // saveCurrentPromptState() is for undo/redo.
