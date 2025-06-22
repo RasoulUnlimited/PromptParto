@@ -711,7 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearOutputOnlyButton.classList.add('opacity-50', 'cursor-not-allowed');
 
         showMessage('همه چیز پاک شد.', 'success');
-        saveCurrentPromptState(); // Save empty state to history
+        saveCurrentStateToHistory(); // Save empty state to history
     }
 
     /**
@@ -1497,7 +1497,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.PROMPT_HISTORY_LIMIT = PROMPT_HISTORY_LIMIT;
     window.promptHistory = []; // Stores { content: string, timestamp: Date }
 
-    // saveCurrentPromptState() is for undo/redo.
+    // saveCurrentStateToHistory() is for undo/redo.
     // We need a separate function for long-term history saved to localStorage.
 
     // --- Auto-Save Prompt Logic ---
@@ -1577,7 +1577,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateWordCount();
                     updateTokenCount();
                     // Clear long-term history if loading from URL to avoid confusion
-                    promptHistory = [];
+                    window.promptHistory = [];
                     renderPromptHistoryList();
                     // Clear undo/redo history as well
                     promptHistoryStack = [];
