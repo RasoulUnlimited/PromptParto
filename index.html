@@ -678,7 +678,7 @@
     <!-- JavaScript File -->
     <script type="module" src="js/components/main.js"></script>
     <div id="confettiContainer" class="confetti-container"></div>
-    <script>
+    <script nonce="RasoulCSP">
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('service-worker.js', { scope: '/' }).catch(err => console.error('SW registration failed:', err));
