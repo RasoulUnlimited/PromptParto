@@ -1,4 +1,5 @@
-const CACHE_NAME = 'promptparto-v1';
+// Service Worker - version 2
+const CACHE_NAME = 'promptparto-v2';
 const ASSETS = [
   '/',
   '/index.html',
