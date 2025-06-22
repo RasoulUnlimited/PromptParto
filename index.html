@@ -243,6 +243,10 @@
                         >
                         <label for="includeDelimitersInOutput" class="text-gray-700 dark:text-gray-300">شامل جداکننده‌ها در خروجی (برای جداکننده سفارشی و Regex)</label>
                     </div>
+                    <div class="flex items-center flex-wrap gap-2 col-span-1 md:col-span-2">
+                        <input type="checkbox" id="enableSuccessSound" class="ml-2 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700" aria-label="Enable success sound">
+                        <label for="enableSuccessSound" class="text-gray-700 dark:text-gray-300">پخش صدای موفقیت پس از عملیات</label>
+                    </div>
                 </div>
 
                 <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -678,5 +682,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
     <!-- JavaScript File -->
     <script type="module" src="js/components/main.js"></script>
+    <div id="confettiContainer" class="confetti-container"></div>
 </body>
 </html>

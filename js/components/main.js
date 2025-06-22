@@ -91,6 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const aiTopPInput = document.getElementById('aiTopP'); // New
     const aiResponseCharLimitInput = document.getElementById('aiResponseCharLimit'); // New
     const apiKeyInput = document.getElementById('apiKeyInput'); // New
+    const successSoundToggle = document.getElementById('enableSuccessSound');
     
     // AI Response text area counts and bar
     const aiCharCountDisplay = document.getElementById('aiCharCount');
@@ -148,7 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
         theme: 'light',
         aiTemperature: parseFloat(aiTemperatureInput.value), // New
         aiTopP: parseFloat(aiTopPInput.value), // New
-        aiResponseCharLimit: parseInt(aiResponseCharLimitInput.value, 10) // New
+        aiResponseCharLimit: parseInt(aiResponseCharLimitInput.value, 10), // New
+        successSoundEnabled: true
     };
 
     /**
@@ -175,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 aiTemperatureInput.value = settings.aiTemperature; // New
                 aiTopPInput.value = settings.aiTopP; // New
                 aiResponseCharLimitInput.value = settings.aiResponseCharLimit; // New
+                successSoundToggle.checked = settings.successSoundEnabled;
                 applyTheme(settings.theme);
             } else {
                 const prefersDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -208,6 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         settings.aiTemperature = parseFloat(aiTemperatureInput.value); // New
         settings.aiTopP = parseFloat(aiTopPInput.value); // New
         settings.aiResponseCharLimit = parseInt(aiResponseCharLimitInput.value, 10); // New
+        settings.successSoundEnabled = successSoundToggle.checked;
         try {
             localStorage.setItem('promptPartoSettings', JSON.stringify(settings));
         } catch (e) {
@@ -454,6 +458,46 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Plays a short success sound if enabled in settings.
+     */
+    function playSuccessSound() {
+        if (!settings.successSoundEnabled) return;
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = 880;
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
+            setTimeout(() => ctx.close(), 250);
+        } catch (e) {
+            console.error('Audio error', e);
+        }
+    }
+
+    /**
+     * Triggers a small confetti animation.
+     */
+    function triggerConfetti() {
+        const container = document.getElementById('confettiContainer');
+        if (!container) return;
+        const colors = ['#f87171','#facc15','#4ade80','#60a5fa','#c084fc'];
+        for (let i = 0; i < 20; i++) {
+            const piece = document.createElement('span');
+            piece.className = 'confetti-piece';
+            piece.style.backgroundColor = colors[Math.floor(Math.random()*colors.length)];
+            piece.style.left = Math.random() * 100 + '%';
+            piece.style.transform = `rotate(${Math.random()*360}deg)`;
+            piece.style.animationDelay = `${Math.random()*0.2}s`;
+            container.appendChild(piece);
+            setTimeout(() => piece.remove(), 900);
+        }
+    }
+
+    /**
      * Updates and briefly shows the split progress badge.
      */
     function updateSplitBadge() {
@@ -477,12 +521,15 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function showSplitSuccess() {
         const original = '<i class="fas fa-cut mr-2"></i> تقسیم پرامپت';
-        splitButton.classList.add('split-success');
+        splitButton.classList.add('split-success', 'pulse');
         splitButton.innerHTML = `<i class="fas fa-check mr-2"></i> انجام شد!`;
+        triggerConfetti();
+        playSuccessSound();
         setTimeout(() => {
             splitButton.classList.remove('split-success');
             splitButton.innerHTML = original;
         }, 1000);
+        setTimeout(() => splitButton.classList.remove('pulse'), 400);
     }
 
     /**
@@ -1753,6 +1800,9 @@ document.addEventListener('DOMContentLoaded', () => {
         triggerAutoSplit();
     });
 
+    if (successSoundToggle) {
+        successSoundToggle.addEventListener('change', saveSettings);
+    }
 
     // Listen for input changes to update character/word/token count AND trigger auto-split/history save
     let debounceTimerAutoSplit;
