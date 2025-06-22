@@ -1,4 +1,5 @@
-These fonts should be downloaded and placed here:
-- Inter (e.g., Inter-Regular.woff2, Inter-Bold.woff2)
-- Vazirmatn (e.g., Vazirmatn-Regular.woff2, Vazirmatn-Bold.woff2)
-Due to environment restrictions, the font files are not included.
+This directory contains the font files used by PromptParto.
+Included families:
+- Inter (Regular and Bold)
+- Vazirmatn (Regular and Bold)
+The fonts are committed to the repository so no additional download is required.
