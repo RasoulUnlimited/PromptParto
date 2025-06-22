@@ -63,6 +63,31 @@ npm test
 ```
 
 `npm run lint` checks all JavaScript files under `js/` using ESLint and all CSS files with Stylelint.
-`npm test` currently prints "No tests yet" because automated tests have not been implemented.
+`npm test` runs the Jest test suite.
 
 The build step (`npm run build`) outputs the production files to `dist/` and automatically generates `dist/sitemap.xml` based on all HTML files. This ensures search engines always receive an up‑to‑date sitemap when new pages are added.
+
+## Content Security Policy
+
+When hosting the site on GitHub Pages behind Cloudflare, configure a strict
+`Content-Security-Policy` header. Giscus comments are not used, so the
+`giscus.app` domain can be omitted. A recommended policy is:
+
+```text
+default-src 'self' blob:;
+script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://static.cloudflareinsights.com 'nonce-RasoulCSP';
+style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net 'nonce-RasoulCSP';
+style-src-attr 'none';
+style-src-elem 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net;
+font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+img-src 'self' data:;
+connect-src 'self' https://static.cloudflareinsights.com https://api.github.com https://orcid.org https://about.me https://www.researchgate.net https://www.linkedin.com https://github.com;
+frame-src https://giscus.app;
+object-src 'none';
+base-uri 'self';
+form-action 'self';
+frame-ancestors 'self';
+```
+
+This policy keeps only the domains required for CDN assets and analytics while
+dropping any allowances for `giscus.app`.
