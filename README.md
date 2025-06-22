@@ -65,7 +65,12 @@ npm test
 `npm run lint` checks all JavaScript files under `js/` using ESLint and all CSS files with Stylelint.
 `npm test` runs the Jest test suite.
 
+
 The build step (`npm run build`) outputs the production files to `dist/` and automatically generates `dist/sitemap.xml` based on all HTML files. This ensures search engines always receive an up‑to‑date sitemap when new pages are added.
+
+## Fonts
+
+PromptParto bundles the [Inter](https://github.com/rsms/inter) and [Vazirmatn](https://github.com/fontstore/Vazirmatn) typefaces. Both families are distributed under the [SIL Open Font License 1.1](https://scripts.sil.org/OFL). Attribution files can be found in `assets/fonts/`.
 
 ## Content Security Policy
 
@@ -82,7 +87,6 @@ style-src-elem 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com 
 font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
 img-src 'self' data:;
 connect-src 'self' https://static.cloudflareinsights.com https://api.github.com https://orcid.org https://about.me https://www.researchgate.net https://www.linkedin.com https://github.com;
-frame-src https://giscus.app;
 object-src 'none';
 base-uri 'self';
 form-action 'self';

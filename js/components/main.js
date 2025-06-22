@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const outputContainer = document.getElementById('outputContainer');
     const messageBox = document.getElementById('messageBox');
     const messageText = document.getElementById('messageText');
+    const closeMessageButton = document.getElementById('closeMessageButton');
     const charCountDisplay = document.getElementById('charCount');
     const wordCountDisplay = document.getElementById('wordCount');
     const tokenCountDisplay = document.getElementById('tokenCount');
@@ -1623,7 +1624,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Event Listeners ---
-    
+
+    closeMessageButton.addEventListener('click', () => {
+        messageBox.classList.add('hidden');
+        if (messageBox.timeoutId) {
+            clearTimeout(messageBox.timeoutId);
+            messageBox.timeoutId = null;
+        }
+    });
+
     // Manual split button click
     splitButton.addEventListener('click', () => {
         updateMaxCharsPerPart();

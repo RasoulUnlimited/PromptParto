@@ -24,11 +24,10 @@
     <link rel="preload" href="assets/fonts/Inter-Bold.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="assets/fonts/Vazirmatn-Regular.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="assets/fonts/Vazirmatn-Bold.woff2" as="font" type="font/woff2" crossorigin>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com" defer></script>
-    <!-- Font Awesome for icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">    <!-- Custom Styles -->
+    <!-- Compiled Tailwind CSS -->
     <link rel="stylesheet" href="css/style.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <script type="application/ld+json">
         {
           "@context": "https://schema.org",
@@ -443,9 +442,9 @@
 
             <div id="messageBox" class="p-4 rounded-lg relative hidden mt-6" role="status" aria-live="polite">
                 <span id="messageText"></span>
-                <span class="absolute top-0 bottom-0 left-0 px-4 py-3 cursor-pointer" onclick="document.getElementById('messageBox').classList.add('hidden');" aria-label="Close Message">
+                <button id="closeMessageButton" class="absolute top-0 bottom-0 left-0 px-4 py-3" aria-label="Close Message">
                     <i aria-hidden="true" class="fas fa-times"></i>
-                </span>
+                </button>
             </div>
         </div>
 

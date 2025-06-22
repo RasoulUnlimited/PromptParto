@@ -16,3 +16,4 @@ jobs:
       - run: npm ci
       - run: npx eslint js/**/*.js
       - run: npx stylelint "css/**/*.css"
+      - run: npm test
