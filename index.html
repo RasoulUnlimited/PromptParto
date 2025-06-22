@@ -22,6 +22,7 @@
     <meta http-equiv="X-Content-Type-Options" content="nosniff">
     <meta name="referrer" content="no-referrer">
     <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <link rel="manifest" href="manifest.webmanifest">
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com" ></script>
     <!-- Google Fonts: Inter for general text, Vazirmatn for Persian -->
@@ -30,6 +31,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" >
     <!-- Custom Styles -->
     <link rel="stylesheet" href="css/style.css">
+    <script type="application/ld+json">
+        {
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          "name": "PromptParto",
+          "applicationCategory": "WebApplication",
+          "operatingSystem": "All",
+          "url": "https://promptparto.rasoulunlimited.ir/",
+          "author": {
+            "@type": "Person",
+            "name": "Rasoul Unlimited",
+            "url": "https://github.com/RasoulUnlimited"
+          }
+        }
+        </script>
 </head>
 <body class="bg-gray-100 flex flex-col min-h-screen font-vazirmatn text-gray-800 transition-colors duration-300">
     <!-- Header -->
@@ -43,6 +59,10 @@
             </p>
         </div>
     </header>
+
+
+    <!-- Split progress badge -->
+    <div id="splitBadge" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-yellow-500 text-white px-4 py-1 rounded-full shadow-lg hidden"></div>
 
     <!-- Main Content -->
     <main class="container mx-auto p-4 sm:p-8 flex-grow">
@@ -642,6 +662,14 @@
                 <a href="https://github.com/RasoulUnlimited/PromptParto" target="_blank" class="text-blue-400 hover:underline" aria-label="PromptParto GitHub Repository">
                     <i aria-hidden="true" class="fab fa-github ml-1"></i> سورس کد در گیت‌هاب
                 </a>
+                |
+                <a href="https://twitter.com/RasoulUnlimited" target="_blank" class="text-blue-400 hover:underline" aria-label="RasoulUnlimited on Twitter">
+                    <i aria-hidden="true" class="fab fa-twitter ml-1"></i> توییتر
+                </a>
+                |
+                <a href="https://www.linkedin.com/in/rasoulunlimited/" target="_blank" class="text-blue-400 hover:underline" aria-label="RasoulUnlimited on LinkedIn">
+                    <i aria-hidden="true" class="fab fa-linkedin ml-1"></i> لینکدین
+                </a>
             </p>
         </div>
     </footer>
@@ -649,9 +677,6 @@
     <!-- Markdown Parser Library (for AI Markdown output) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.1/marked.min.js"></script>
     <!-- JavaScript File -->
-    <script src="js/components/main.js"></script>
-    <script src="js/utils/dragdrop.js"></script>
-    <script src="js/utils/gemini.js"></script>
-    <script src="js/utils/history.js"></script>
+    <script type="module" src="js/components/main.js"></script>
 </body>
 </html>

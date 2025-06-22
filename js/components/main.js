@@ -132,6 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Auto-save interval
     const AUTO_SAVE_INTERVAL = 5000; // Save every 5 seconds
 
+    // Track how many times splitting has occurred
+    let splitCount = 0;
+
     // --- Settings Management ---
     // Object to hold all configurable settings
     const settings = {
@@ -451,6 +454,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
+     * Updates and briefly shows the split progress badge.
+     */
+    function updateSplitBadge() {
+        const badge = document.getElementById('splitBadge');
+        if (!badge) return;
+        badge.textContent = `${splitCount} تقسیم`;
+        badge.classList.remove('hidden');
+        badge.classList.add('fade-in');
+        setTimeout(() => {
+            badge.classList.remove('fade-in');
+            badge.classList.add('fade-out');
+            setTimeout(() => {
+                badge.classList.add('hidden');
+                badge.classList.remove('fade-out');
+            }, 600);
+        }, 1200);
+    }
+
+    /**
+     * Briefly shows a success checkmark on the split button.
+     */
+    function showSplitSuccess() {
+        const original = '<i class="fas fa-cut mr-2"></i> تقسیم پرامپت';
+        splitButton.classList.add('split-success');
+        splitButton.innerHTML = `<i class="fas fa-check mr-2"></i> انجام شد!`;
+        setTimeout(() => {
+            splitButton.classList.remove('split-success');
+            splitButton.innerHTML = original;
+        }, 1000);
+    }
+
+    /**
      * Copies text to the clipboard and provides visual feedback on the button.
      * متن را در کلیپ‌بورد کپی کرده و بازخورد بصری روی دکمه ارائه می‌دهد.
      * @param {string} text - The text to copy.
@@ -472,12 +507,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (buttonElement) {
                 const originalText = buttonElement.innerHTML;
-                buttonElement.classList.add('copied');
+                buttonElement.classList.add('copied', 'pulse');
                 buttonElement.innerHTML = `<i class="fas fa-check ml-2"></i> کپی شد!`;
                 setTimeout(() => {
                     buttonElement.innerHTML = originalText;
                     buttonElement.classList.remove('copied');
                 }, 1500);
+                setTimeout(() => buttonElement.classList.remove('pulse'), 400);
             }
 
         } catch (err) {
@@ -1061,6 +1097,9 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        splitCount++;
+        updateSplitBadge();
+
         copyAllButton.disabled = false;
         copyAllButton.classList.remove('opacity-50', 'cursor-not-allowed');
         exportTextButton.disabled = false;
@@ -1546,7 +1585,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const parts = splitPrompt(prompt, strategy, customDelim, regexDelim, includeDelimiters);
         renderOutput(parts);
         splitButton.disabled = false;
-        splitButton.innerHTML = `<i class="fas fa-cut mr-2"></i> تقسیم پرامپت`;
+        showSplitSuccess();
 
         saveCurrentStateToHistory(); // Save state after manual split
         saveLongTermPromptHistory(); // Save state to long-term history after manual split
@@ -1760,7 +1799,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const parts = splitPrompt(prompt, strategy, customDelim, regexDelim, includeDelimiters);
                 renderOutput(parts);
                 splitButton.disabled = false;
-                splitButton.innerHTML = `<i class="fas fa-cut mr-2"></i> تقسیم پرامپت`;
+                showSplitSuccess();
             }, 50);
         } else {
             clearOutputOnly();

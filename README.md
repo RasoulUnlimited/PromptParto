@@ -7,6 +7,7 @@ PromptParto is a lightweight web tool for breaking long prompts into manageable 
 - **AI refine** - refine any prompt part using Gemini AI directly from the interface.
 - **Undo/redo** - revert changes with `Ctrl+Z` and `Ctrl+Y`.
 - Drag & drop text files or use the **Upload File** button, automatic saving, and export to text, Markdown or JSON.
+- Animated buttons and badges show progress and give feedback on copy/share actions and successful splits.
 
 ## Running locally
 
@@ -61,3 +62,5 @@ npm test
 ```
 
 `npm run lint` checks all JavaScript files under `js/` using ESLint. The `test` script currently prints a placeholder message.
+`npm run lint` checks all JavaScript files under `js/` using ESLint and all CSS files with Stylelint.
+`npm test` runs the Jest test suite found in the `tests/` directory.

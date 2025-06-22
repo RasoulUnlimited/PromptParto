@@ -556,3 +556,36 @@ body.compact-view .prompt-part-box {
     padding: 1rem;
     margin-bottom: 0.75rem;
 }
+
+/* Pulse animation for copy/share buttons */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.pulse {
+    animation: pulse 0.4s ease;
+}
+
+/* Success style for split button */
+.split-success {
+    background-color: #16a34a; /* green-600 */
+}
+
+/* Badge animations */
+#splitBadge.fade-in {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#splitBadge.fade-out {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+#splitBadge {
+    transition: opacity 0.3s, transform 0.3s;
+    opacity: 0;
+    transform: translateY(-10px);
+}

@@ -8,7 +8,9 @@
     "lint": "npm run lint:js && npm run lint:css",
     "lint:js": "eslint js/**/*.js",
     "lint:css": "stylelint \"css/**/*.css\"",
-    "test": "echo \"No tests yet\""
+    "test": "echo \"No tests yet\"",
+    "build": "vite build",
+    "dev": "vite"
   },
   "keywords": [],
   "author": "Mohammad Rasoul Sohrabi",
@@ -17,6 +19,7 @@
     "eslint": "^9.29.0",
     "htmlhint": "^1.6.2",
     "stylelint": "^16.20.0",
-    "stylelint-config-standard": "^36.0.0"
+    "stylelint-config-standard": "^36.0.0",
+    "vite": "^5.0.0"
   }
 }
