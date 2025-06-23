@@ -75,8 +75,7 @@ PromptParto bundles the [Inter](https://github.com/rsms/inter) and [Vazirmatn](h
 ## Content Security Policy
 
 When hosting the site on GitHub Pages behind Cloudflare, configure a strict
-`Content-Security-Policy` header. Giscus comments are not used, so the
-`giscus.app` domain can be omitted. A recommended policy is:
+`Content-Security-Policy` header. A recommended policy is:
 
 ```text
 default-src 'self' blob:;
@@ -93,5 +92,4 @@ form-action 'self';
 frame-ancestors 'self';
 ```
 
-This policy keeps only the domains required for CDN assets and analytics while
-dropping any allowances for `giscus.app`.
+This policy keeps only the domains required for CDN assets and analytics.

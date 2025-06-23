@@ -683,7 +683,8 @@
     <script nonce="RasoulCSP">
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('service-worker.js', { scope: '/' }).catch(err => console.error('SW registration failed:', err));
+                const basePath = location.pathname.slice(0, location.pathname.lastIndexOf('/') + 1);
+                navigator.serviceWorker.register(`${basePath}service-worker.js`, { scope: basePath }).catch(err => console.error('SW registration failed:', err));
             });
         }
     </script>
